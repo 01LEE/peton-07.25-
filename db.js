@@ -4,7 +4,7 @@ const db = mysql.createConnection({
   host: 'localhost',
   user: 'root',
   port: '3306',
-  password: 'gg696923!!',
+  password: '980327!',
   database: 'peton'
 });
 
