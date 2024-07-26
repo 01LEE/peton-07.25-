@@ -9,6 +9,7 @@ exports.getMyInfo = (req, res) => {
     LEFT JOIN pet ON user.user_id = pet.user_id
     WHERE user.login_id = ?
   `;
+  
   db.query(query, [req.session.login_id], (err, results) => {
     if (err) {
       console.error("내 정보 조회 중 에러 발생: ", err);
