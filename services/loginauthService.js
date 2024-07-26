@@ -41,12 +41,16 @@ exports.login = (req, res) => {
 };
 
 exports.logout = (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      console.error("로그아웃 중 에러 발생: ", err);
-      res.status(500).send('서버 에러');
-      return;
-    }
-    res.redirect('/');
-  });
+  if (req.session) {
+    req.session.destroy((err) => {
+      if (err) {
+        console.error("로그아웃 중 에러 발생: ", err);
+        res.status(500).send('서버 에러');
+      } else {
+        res.redirect('/login');
+      }
+    });
+  } else {
+    res.redirect('/login');
+  }
 };
