@@ -1,4 +1,4 @@
-/*
+/* 기존 코드
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const db = require('../db');
@@ -48,6 +48,7 @@ exports.createUser = async (req, res) => {
   });
 };
 */
+
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const db = require('../db');
