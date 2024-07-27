@@ -115,3 +115,129 @@ button:hover {
     background-color: #555;
     transform: scale(1.05);
 }
+
+/* ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ HW ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ*/
+
+/* 1.4 */
+#chat-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+#messages {
+    height: 300px;
+    overflow-y: scroll;
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+#message-input {
+    width: calc(100% - 100px);
+    padding: 10px;
+}
+#send-button {
+    padding: 10px;
+}
+
+.message-wrapper {
+    display: flex;
+    flex-direction: column; /* flex-direction 추가 */
+    margin-bottom: 10px;
+}
+
+.message-wrapper.sender {
+    align-items: flex-end; /* 변경 사항: justify-content -> align-items */
+}
+
+.message-wrapper.receiver {
+    align-items: flex-start; /* 변경 사항: justify-content -> align-items */
+}
+
+.message {
+    padding: 5px 10px;
+    border-radius: 5px;
+    max-width: 70%;
+    word-wrap: break-word;
+}
+
+.message.sender {
+    background-color: #dcf8c6;
+    text-align: right;
+   margin-left: auto;
+}
+
+.message.receiver {
+    background-color: #fff;
+    text-align: left;
+    /* margin-left: 15px; 말풍선 왼쪽 여백 조절*/
+}
+
+.username {
+    font-weight: bold;
+    margin-bottom: 3px;
+    /* margin-left: 5px; 상대 이름 왼쪽 여백 조절*/
+}
+
+/* 1.3 */
+/*
+#chat-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+#messages {
+    height: 300px;
+    overflow-y: scroll;
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+#message-input {
+    width: calc(100% - 100px);
+    padding: 10px;
+}
+#send-button {
+    padding: 10px;
+}
+
+.message-wrapper {
+    display: flex;
+    margin-bottom: 10px;
+}
+
+.message-wrapper.sender {
+    justify-content: flex-end;
+}
+
+.message-wrapper.receiver {
+    justify-content: flex-start;
+}
+
+.message {
+    padding: 5px 10px;
+    border-radius: 5px;
+    max-width: 70%;
+    word-wrap: break-word;
+}
+
+.message.sender {
+    background-color: #dcf8c6;
+    text-align: right;
+   margin-left: auto;
+}
+
+.message.receiver {
+    background-color: #fff;
+    text-align: left;
+    margin-right: auto;
+}
+
+.username {
+    font-weight: bold;
+    margin-bottom: 3px;
+}
+*/

@@ -1,5 +1,23 @@
 const db = require('../db');
 const bcrypt = require('bcrypt');
+// ㅡㅡ아래 3줄 추가ㅡㅡ
+const fs = require('fs');
+const path = require('path');
+const sessionDir = path.join(__dirname, '..', 'sessions');
+
+
+
+// ㅡㅡ세션 디렉토리와 파일을 확인하는 함수ㅡㅡ
+function checkSessionFiles() {
+  fs.readdir(sessionDir, (err, files) => {
+    if (err) {
+      console.error('세션 디렉토리 읽기 중 에러 발생: ', err);
+    } else {
+      console.log('현재 세션 파일 목록: ', files);
+    }
+  });
+}
+// ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
 
 exports.login = (req, res) => {
   const { login_id, password, rememberMe} = req.body;
@@ -50,12 +68,16 @@ exports.login = (req, res) => {
 };
 
 exports.logout = (req, res) => {
+  console.log('로그아웃 시도 중...');
   req.session.destroy((err) => {
     if (err) {
       console.error("로그아웃 중 에러 발생: ", err);
       res.status(500).send('서버 에러');
       return;
     }
+    console.log('세션 파괴 완료');
+    res.clearCookie('connect.sid', { path: '/' });
+    checkSessionFiles(); // 세션 파일 확인
     res.redirect('/');
   });
 };

@@ -1,3 +1,4 @@
+<!-- 기존 버전
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -31,6 +32,45 @@
     <h1>Welcome to Our Website</h1>
 
     
+
+    <p>This is the home page content.</p>
+
+</body>
+</html>
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Page</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<style>
+    h1 { text-align: center;}
+    p { text-align: center;}
+</style>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/noticeboard">noticeboard</a></li>
+                <li><a href="/trainers">Trainers</a></li>
+                <li><a href="/myinfo">My Info</a></li>
+                <li><a href="/dogencyclopedia">Dog Encyclopedia</a></li>
+                <li><a href="/chat">Chat</a></li> <!-- 채팅 기능으로 이동하는 버튼 추가 -->
+                <% if (!login_id) { %>
+                    <li><a href="/login">Login</a></li>
+                <% } else { %>
+                    <li><a href="/logout">Logout</a></li>
+                <% } %>
+            </ul>
+        </nav>
+    </header>
+
+    <h1>Welcome to Our Website</h1>
 
     <p>This is the home page content.</p>
 
