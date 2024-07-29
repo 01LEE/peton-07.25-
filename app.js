@@ -65,6 +65,7 @@ const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const FileStore = require('session-file-store')(session);
 const fs = require('fs');
+const db = require('./db');
 const isAuthenticated = require('./middlewares/isAuthenticated');
 const sessionremember = require('./middlewares/sessionremember');
 const scrollBlocker = require('./middlewares/scrollBlocker');
@@ -111,6 +112,7 @@ const myinfoRouter = require('./routes/myinfo');
 const dogencyclopediaRouter = require('./routes/dogencyclopedia');
 const ID_findRouter = require('./routes/userfind/ID_find');
 const PW_findRouter = require('./routes/userfind/PW_find');
+const chatRouter = require('./routes/chat'); // 여기서 chat 라우터 추가
 
 app.use('/', PW_findRouter);
 app.use('/', ID_findRouter);
@@ -121,21 +123,10 @@ app.use('/', noticeboardRouter);
 app.use('/', trainerRouter);
 app.use('/', myinfoRouter);
 app.use('/', dogencyclopediaRouter);
+app.use('/', chatRouter); // chat 라우터 사용
 
 app.get('/', (req, res) => {
   res.render('home'); // EJS 템플릿 렌더링
-});
-
-// 채팅방 라우트 보호
-app.get('/chat', isAuthenticated, scrollBlocker, (req, res) => {
-  res.render('chat'); // EJS 템플릿 렌더링
-});
-
-// 현재 사용자 정보를 제공하는 라우트 추가
-app.get('/getCurrentUser', (req, res) => {
-  const currentUser = req.session.login_id || 'guest';
-  const receiver = 'receiver_id'; // 실제 채팅 상대방의 ID로 대체
-  res.json({ sender: currentUser, receiver: receiver });
 });
 
 module.exports = app;

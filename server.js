@@ -63,6 +63,7 @@ server.listen(port, () => {
   console.log(`Server running at http://localhost:${port}/`);
 });
 
+console.log('WebSocket server is running on ws://localhost:8080');
 
 // 1.3
 /*
