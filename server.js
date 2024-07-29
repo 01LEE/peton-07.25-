@@ -6,27 +6,11 @@ const socketIo = require('socket.io');
 const express = require('express');
 const path = require('path');
 const app = require('./app'); // app.js 파일에서 익스프레스 애플리케이션을 가져옴
+const db = require('./db'); // db.js 파일에서 데이터베이스 연결을 가져옴
 
 const port = 3000; // 포트 번호 정의
 const server = http.createServer(app);
 const io = socketIo(server);
-
-const mysql = require('mysql'); // mysql 패키지 사용
-
-const db = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: '980327!',
-  database: 'peton'
-});
-
-db.connect((err) => {
-  if (err) {
-    console.error('Database connection failed:', err);
-  } else {
-    console.log('Connected to the database');
-  }
-});
 
 io.on('connection', (socket) => {
   console.log('New client connected');
