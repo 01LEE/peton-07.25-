@@ -17,7 +17,12 @@
                 <li><a href="/trainers">Trainers</a></li>
                 <li><a href="/myinfo">My Info</a></li>
                 <li><a href="/dogencyclopedia">Dog Encyclopedia</a></li>
-                
+                <li><a href="/chat">Chat</a></li> <!-- 채팅 기능으로 이동하는 버튼 추가 -->
+                <% if (!login_id) { %>
+                    <li><a href="/login">Login</a></li>
+                <% } else { %>
+                    <li><a href="/logout">Logout</a></li>
+                <% } %>
             </ul>
         </nav>
     </header>
