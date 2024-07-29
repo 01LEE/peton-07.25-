@@ -17,7 +17,7 @@ const db = mysql.createConnection({
   host: 'localhost',
   user: 'root',
   password: '980327!',
-  database: 'chat_db'
+  database: 'peton'
 });
 
 db.connect((err) => {
@@ -96,7 +96,7 @@ const db = mysql.createConnection({
   host: 'localhost',
   user: 'root',
   password: '980327!',
-  database: 'chat_db'
+  database: 'peton'
 });
 
 db.connect((err) => {

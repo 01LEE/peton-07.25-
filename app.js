@@ -65,6 +65,9 @@ const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const FileStore = require('session-file-store')(session);
 const fs = require('fs');
+const isAuthenticated = require('./middlewares/isAuthenticated');
+const sessionremember = require('./middlewares/sessionremember');
+const scrollBlocker = require('./middlewares/scrollBlocker');
 const app = express();
 const ip = require('ip');
 
@@ -123,7 +126,8 @@ app.get('/', (req, res) => {
   res.render('home'); // EJS 템플릿 렌더링
 });
 
-app.get('/chat', (req, res) => {
+// 채팅방 라우트 보호
+app.get('/chat', isAuthenticated, scrollBlocker, (req, res) => {
   res.render('chat'); // EJS 템플릿 렌더링
 });
 
