@@ -113,6 +113,7 @@ const dogencyclopediaRouter = require('./routes/dogencyclopedia');
 const ID_findRouter = require('./routes/userfind/ID_find');
 const PW_findRouter = require('./routes/userfind/PW_find');
 const chatRouter = require('./routes/chat'); // 여기서 chat 라우터 추가
+const usersRouter = require('./routes/users'); // users 라우터 추가
 
 app.use('/', PW_findRouter);
 app.use('/', ID_findRouter);
@@ -124,9 +125,10 @@ app.use('/', trainerRouter);
 app.use('/', myinfoRouter);
 app.use('/', dogencyclopediaRouter);
 app.use('/', chatRouter); // chat 라우터 사용
+app.use('/', usersRouter); // users 라우터 사용
 
 app.get('/', (req, res) => {
-  res.render('home'); // EJS 템플릿 렌더링
+  res.render('home', {title: 'Home Page '}); // EJS 템플릿 렌더링
 });
 
 module.exports = app;

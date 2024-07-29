@@ -14,9 +14,18 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
   // 현재 사용자 정보를 가져와서 저장
   fetch('/getCurrentUser')
-    .then(response => response.json())
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
     .then(data => {
       currentUser = data.sender;
+      console.log('Current user:', currentUser);
+    })
+    .catch(error => {
+      console.error('Error fetching current user:', error);
     });
 
   sendButton.addEventListener('click', () => {
@@ -24,7 +33,12 @@ document.addEventListener('DOMContentLoaded', (event) => {
     if (message.trim() === '') return; // 빈 메시지 무시
 
     fetch('/getCurrentUser')
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
       .then(data => {
         const { sender, receiver } = data;
         const chatMessage = {
@@ -32,9 +46,13 @@ document.addEventListener('DOMContentLoaded', (event) => {
           receiver: receiver,
           message: message
         };
+        console.log('Sending message:', chatMessage);
         socket.emit('sendMessage', chatMessage);
         messageInput.value = '';
         addMessageToChat(chatMessage, 'sender');
+      })
+      .catch(error => {
+        console.error('Error fetching current user:', error);
       });
   });
 
@@ -77,11 +95,21 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
   const loadMessages = () => {
     fetch('/getCurrentUser')
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
       .then(data => {
         const { sender, receiver } = data;
         fetch(`/messages?sender=${sender}&receiver=${receiver}`)
-          .then(response => response.json())
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            return response.json();
+          })
           .then(messages => {
             messages.forEach(message => {
               const type = message.sender === sender ? 'sender' : 'receiver';
@@ -89,7 +117,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
             });
           })
           .catch(error => console.error('Error fetching messages:', error));
-      });
+      })
+      .catch(error => console.error('Error fetching current user:', error));
   };
 
   loadMessages();
