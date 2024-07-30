@@ -113,7 +113,9 @@ const dogencyclopediaRouter = require('./routes/dogencyclopedia');
 const ID_findRouter = require('./routes/userfind/ID_find');
 const PW_findRouter = require('./routes/userfind/PW_find');
 const chatRouter = require('./routes/chat'); // 여기서 chat 라우터 추가
+const chatlistRouter = require('./routes/chatlist'); // chatlist 라우터 추가
 const usersRouter = require('./routes/users'); // users 라우터 추가
+
 
 app.use('/', PW_findRouter);
 app.use('/', ID_findRouter);
@@ -125,6 +127,7 @@ app.use('/', trainerRouter);
 app.use('/', myinfoRouter);
 app.use('/', dogencyclopediaRouter);
 app.use('/', chatRouter); // chat 라우터 사용
+app.use('/', chatlistRouter); // chatlist 라우터 사용
 app.use('/', usersRouter); // users 라우터 사용
 
 app.get('/', (req, res) => {

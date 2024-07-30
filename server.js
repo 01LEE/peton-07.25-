@@ -10,6 +10,7 @@ const db = require('./db'); // db.js 파일에서 데이터베이스 연결을 �
 const session = require('express-session');
 const FileStore = require('session-file-store')(session);
 const fs = require('fs');
+const { v4: uuidv4 } = require('uuid'); //UUID 생성 모듈
 const { exec } = require('child_process');
 
 const port = 3000; // 포트 번호 정의
@@ -37,6 +38,7 @@ io.use((socket, next) => {
   sessionMiddleware(socket.request, socket.request.res || {}, next);
 });
 
+
 app.get('/getCurrentUser', (req, res) => {
   // 세션에서 현재 사용자 정보 가져오기
   if (req.session && req.session.login_id) {
@@ -51,10 +53,21 @@ app.get('/ping', (req, res) => {
   res.sendStatus(200);
 });
 
-io.on('connection', (socket) => {
-  console.log('New client connected');
-
-  socket.on('sendMessage', (data) => {
+// 채팅방 ID 생성 엔드포인트
+app.get('/createChatRoom', (req, res) => {
+  const chatRoomId = uuidv4();
+  const query = 'INSERT INTO conversations (id, title) VALUES (?, ?)';
+  db.query(query, [chatRoomId, `Chat Room ${chatRoomId}`], (err) => {
+    if (err) {
+      console.error('Database query error:', err);
+      res.status(500).json({ message: 'Database error' });
+    } else {
+      res.json({ chatRoomId });
+    }
+  });
+});
+    
+    /*
     console.log('Received message:', data);
     const { sender, receiver, message } = data;
     const query = 'INSERT INTO messages (sender, receiver, message) VALUES (?, ?, ?)';
@@ -67,16 +80,62 @@ io.on('connection', (socket) => {
       }
     });
   });
+*/
+
+  // 채팅방 목록 제공 엔드포인트
+app.get('/chatRooms', (req, res) => {
+  const query = 'SELECT * FROM conversations';
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Database query error:', err);
+      res.status(500).json({ message: 'Database error' });
+    } else {
+      res.json(results);
+    }
+  });
+});
+
+
+// 채팅방 목록 페이지 렌더링
+app.get('/chatlist', (req, res) => {
+  res.render('chatlist');
+});
+
+// 개별 채팅방 페이지 렌더링
+app.get('/chat', (req, res) => {
+  res.render('chat');
+});
+
+io.on('connection', (socket) => {
+  console.log('New client connected');
+
+  socket.on('joinRoom', (roomId) => {
+    socket.join(roomId);
+    console.log(`Client joined room: ${roomId}`);
+  });
+
+  socket.on('sendMessage', (data) => {
+    const { roomId, sender, message } = data;
+    const query = 'INSERT INTO messages (conversation_id, sender, message) VALUES (?, ?, ?)';
+    db.query(query, [roomId, sender, message], (err) => {
+      if (err) {
+        console.error('Database query error:', err);
+      } else {
+        io.to(roomId).emit('message', data);
+      }
+    });
+  });
 
   socket.on('disconnect', () => {
     console.log('Client disconnected');
   });
 });
 
+
 app.get('/messages', (req, res) => {
-  const { sender, receiver } = req.query;
-  const query = 'SELECT * FROM messages WHERE (sender = ? AND receiver = ?) OR (sender = ? AND receiver = ?) ORDER BY timestamp';
-  db.query(query, [sender, receiver, receiver, sender], (err, results) => {
+  const { roomId } = req.query;
+  const query = 'SELECT * FROM messages WHERE conversation_id = ? ORDER BY timestamp';
+  db.query(query, [roomId], (err, results) => {
     if (err) {
       res.status(500).send(err);
     } else {
