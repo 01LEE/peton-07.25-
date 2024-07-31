@@ -7,37 +7,76 @@
     <link rel="stylesheet" href="/ID_find.css">
 </head>
 <body>
-    <h1>아이디 찾기</h1>
-    <div class="bodywrap">
-        <!-- 이메일 입력 폼 -->
-        <% if (!email && !login_id) { %>
-            <form id="emailForm" action="/ID_find" method="POST">
-                <label for="email">이메일:</label>
-                <input type="email" id="email" name="email" required>
-                <button type="submit">코드 전송</button>
-            </form>
-        <% } %>
-
-        <!-- 인증 코드 입력 폼 -->
-        <% if (email && !login_id) { %>
-            <form id="codeForm" action="/verify" method="POST">
-                <input type="hidden" name="email" value="<%= email %>">
-                <label for="code">인증 코드:</label>
-                <input type="text" id="code" name="code" required>
-                <button type="submit">아이디 확인</button>
-            </form>
-        <% } %>
-
-        <!-- 이메일에 해당하는 로그인 ID들을 출력 -->
-        <% if (login_id && login_id.length > 0) { %>
-            <h2>이메일에 해당하는 로그인 ID 목록</h2>
-            <ul>
-                <% for (let i = 0; i < login_id.length; i++) { %>
-                    <li><%= login_id[i].login_id %></li>
+    <header>
+        <div class="header-wrap">
+            <div class="logo">
+                <a href="/">PetOn</a>
+            </div>
+            <nav class="nav">
+                <ul>
+                    <li><a href="/noticeboard">커뮤니티</a></li>
+                    <li><a href="/petencyclopedia">펫 백과</a></li>
+                </ul>
+            </nav>
+            <div class="auth">
+                <a href="/login" class="login-btn">로그인</a>
+                <a href="/createuser" class="register-btn">회원가입</a>
+            </div>
+        </div>
+    </header>
+    
+    <main>
+        <section class="find-id">
+            <h1>아이디 찾기</h1>
+            <div class="find-id-container">
+                <!-- 이메일 입력 폼 -->
+                <% if (!email && !login_id) { %>
+                    <form id="emailForm" action="/ID_find" method="POST">
+                        <label for="email">이메일:</label>
+                        <input type="email" id="email" name="email" required>
+                        <button type="submit" class="btn">코드 전송</button>
+                    </form>
                 <% } %>
-                <button onclick="location.href='/login'" class="btn">로그인 페이지로 이동</button>
+
+                <!-- 인증 코드 입력 폼 -->
+                <% if (email && !login_id) { %>
+                    <form id="codeForm" action="/verify" method="POST">
+                        <input type="hidden" name="email" value="<%= email %>">
+                        <label for="code">인증 코드:</label>
+                        <input type="text" id="code" name="code" required>
+                        <button type="submit" class="btn">아이디 확인</button>
+                    </form>
+                <% } %>
+
+                <!-- 이메일에 해당하는 로그인 ID들을 출력 -->
+                <% if (login_id && login_id.length > 0) { %>
+                    <h2>이메일에 해당하는 로그인 ID 목록</h2>
+                    <ul>
+                        <% for (let i = 0; i < login_id.length; i++) { %>
+                            <li><%= login_id[i].login_id %></li>
+                        <% } %>
+                    </ul>
+                    <button onclick="location.href='/login'" class="btn">로그인 페이지로 이동</button>
+                <% } %>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-wrap">
+            <ul class="footer-links">
+                <li><a href="#">개인정보처리방침</a></li>
+                <li><a href="#">영상처리기기 운영관리 방침</a></li>
+                <li><a href="#">이용안내</a></li>
+                <li><a href="#">누리집개선의견</a></li>
+                <li><a href="#">부서프로그램</a></li>
+                <li><a href="#">누리집 지도</a></li>
             </ul>
-        <% } %>
-    </div>
+            <div class="footer-info">
+                <p>서울특별시 중랑구 용마산로 48길 32(망우본동 144-20)</p>
+                <p>COPYRIGHT 2024. PetOn. ALL RIGHTS RESERVED.</p>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>

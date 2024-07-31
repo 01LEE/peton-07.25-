@@ -17,7 +17,9 @@ app.use(session({
   secret: 'keyboard cat',
   resave: false,
   saveUninitialized: true,
-  store: new FileStore()
+  store: new FileStore({
+    path: path.join(__dirname, 'sessions')  // 세션 파일을 저장할 디렉터리 명시적으로 지정
+  })
 }));
 
 app.set('view engine', 'ejs');
@@ -33,6 +35,8 @@ const myinfoRouter = require('./routes/myinfo');
 const dogencyclopediaRouter = require('./routes/dogencyclopedia');
 const ID_findRouter = require('./routes/userfind/ID_find');
 const PW_findRouter = require('./routes/userfind/PW_find');
+const profileRouter = require('./routes/profile');
+
 
 // const userfind = require('./routes/userfind');
 
@@ -45,6 +49,7 @@ app.use('/', noticeboardRouter);
 app.use('/', trainerRouter);
 app.use('/', myinfoRouter);
 app.use('/', dogencyclopediaRouter);
+app.use('/', profileRouter);
 // app.use('/', userfindRouter);
 
 

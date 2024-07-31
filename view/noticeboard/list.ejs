@@ -1,4 +1,4 @@
-<!-- community.ejs -->
+list.ejs
 
 <!DOCTYPE html>
 <html lang="en">
@@ -17,13 +17,13 @@
                 <li><a href="/trainers">Trainers</a></li>
                 <li><a href="/myinfo">My Info</a></li>
                 <li><a href="/dogencyclopedia">Dog Encyclopedia</a></li>
-                
             </ul>
         </nav>
     </header>
 
     <div class="container">
         <h2>Noticeboard</h2>
+        <div><a href="/noticeboard/form">Create a New Post</a></div>
         <div class="content">
             <table>
                 <tr>
@@ -43,10 +43,6 @@
                     </tr>
                 <% }); %>
             </table>
-            <ul>
-                <% noticeboard.forEach((post) => { %>
-                <% }); %>
-            </ul>
         </div>
     </div>
 </body>
