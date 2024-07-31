@@ -4,7 +4,7 @@ const db = require('../db');
 exports.getMyInfo = (req, res) => {
   const query = `
     SELECT 
-      user.user_id, user.login_id, user.nick_name, user.password, user.create_time, user.update_time, user.user_intro, user.pw_update_time, user.pw_find,
+      user.user_id, user.login_id, user.nick_name, user.password, user.create_time, user.update_time, user.user_intro, user.pw_update_time, user.pw_find, user.email, user.profile_image_url,
       pet.pet_name, pet.pet_breed, pet.pet_age, pet.pet_intro
     FROM user 
     LEFT JOIN pet ON user.user_id = pet.user_id
@@ -47,16 +47,16 @@ exports.renderaddpet = (req, res) => {
 exports.updateaddpet = (req, res) => {
   console.log('Adding pet:', req.body);
 
-  const { pet_name, pet_breed, pet_age, pet_intro } = req.body;
+  const { pet_name, pet_breed, pet_age, pet_intro, pet_image_url } = req.body;
   const userId = req.session.userid;
   console.log('세션에서 가져온 userId:', userId);
 
   if (!userId) {
-    console.log(userIdx);
+    console.log(userId);
     return res.status(400).send('사용자 정보가 없습니다. 로그인 후 다시 시도해주세요.');
   }
 
-  db.query('INSERT INTO pet (user_id, pet_name, pet_breed, pet_age, pet_intro) VALUES (?, ?, ?, ?, ?)', [userId, pet_name, pet_breed, pet_age, pet_intro], (err, results) => {
+  db.query('INSERT INTO pet (user_id, pet_name, pet_breed, pet_age, pet_intro, pet_image_url) VALUES (?, ?, ?, ?, ?, ?)', [userId, pet_name, pet_breed, pet_age, pet_intro,pet_image_url], (err, results) => {
     if (err) {
       console.error('Database query error:', err);
       return res.status(500).send('서버 오류가 발생했습니다.');
