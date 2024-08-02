@@ -1,8 +1,5 @@
-// function isYoursNoticeboard(req, res, next) {
-//     if (user_id == results[0].user_id) {
-//         return next();
-//     } else {
-//     res.redirect('/noticeboard/:post_id');
-//     }
-// }
-// module.exports = isYoursNoticeboard;
+function isYoursNoticeboard(user_id, post_user_id) {
+    return user_id === post_user_id;
+}
+
+module.exports = isYoursNoticeboard;

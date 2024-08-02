@@ -1,5 +1,6 @@
 const exp = require('constants');
 const db = require('../db');
+const isYoursNoticeboard = require('../middlewares/isYoursNoticeboard');
 
 // 게시판 목록을 가져오는 서비스 함수
 exports.getNoticeboard = (req, res) => {
@@ -42,32 +43,55 @@ exports.getPostDetail = (req, res) => {
     if (results.length === 0) {
       return res.status(404).send('게시물이 존재하지 않습니다.');
     }
+
     console.log("----------------------------------");
     console.log("user id :", user_id); // 로그인된 user id
     console.log("post user id :", results[0].user_id); // 게시글의 user id
     console.log(user_id == results[0].user_id); // 로그인된 user id와 게시글의 user id 비교
+    // console.log(isYoursNoticeboard(user_id, results[0].user_id));
     // console.log("상세 페이지의 글 post_id :", results[0].post_id);
-
-    res.render('noticeboard/detail', { post: results[0] });
+    res.render('noticeboard/detail', { post: results[0] }); 
   });
 };
 
 // 게시물을 삭제하는 서비스 함수
 exports.deletePost = (req, res) => {
+  const user_id = req.session.userid;
   const post_id = req.params.post_id;
-  db.query('DELETE FROM noticeboard WHERE post_id = ?', [post_id], (err, result) => {
+
+  db.query('SELECT user_id FROM noticeboard WHERE post_id = ?', [post_id], (err, results) => {
     if (err) {
-      console.error('게시글 삭제 중 에러 발생:', err);
+      console.error('게시글 조회 중 에러 발생:', err);
       return res.status(500).send('서버 에러');
     }
-    res.redirect('/noticeboard');
+    if (results.length === 0) {
+      return res.status(404).send('게시물이 존재하지 않습니다.');
+    }
+    //권한 확인
+    if (!isYoursNoticeboard(user_id, results[0].user_id)) {
+      return res.redirect(`/noticeboard/${post_id}`);
+      // return res.status(403).send('권한이 없습니다.');
+    }
+    db.query('DELETE FROM noticeboard WHERE post_id = ?', [post_id], (err, result) => {
+      if (err) {
+        console.error('게시글 삭제 중 에러 발생:', err);
+        return res.status(500).send('서버 에러');
+      }
+      res.redirect('/noticeboard');
+    });
   });
 };
 
+
+// 게시글을 수정하는 서비스 함수
 exports.getEditDetail = (req, res) => {
   const user_id = req.session.userid;
   const post_id = req.params.post_id;
   db.query(`SELECT * FROM noticeboard WHERE post_id = ${post_id}`, (err, results) => {
+    if(!isYoursNoticeboard(user_id, results[0].user_id)){
+      res.redirect(`/noticeboard/${post_id}`);
+      // return res.status(403).send('권한이 없습니다.');
+    }
     if (err) {
       console.error("게시물 조회 중 에러 발생: ", err);
       res.status(500).send('서버 에러');

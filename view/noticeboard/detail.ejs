@@ -25,7 +25,7 @@
         <div class="content">
             <article>
                 <h2><%= post.title %></h2>
-                <p><strong>작성자:</strong> <%= post.nick_name %></p> 
+                <p><strong>작성자:</strong> <%= post.nick_name %></p>
                 <p><strong>작성 시간:</strong> <%= new Date(post.write_time).toLocaleString() %></p>
                 <div>
                     <h3>내용</h3>
@@ -35,7 +35,29 @@
                 <form action="/noticeboard/delete/<%= post.post_id %>" method="POST">
                     <button type="submit">삭제</button>
                 </form>
-                <!-- 댓글 추가 예정 -->
+
+                <div class="comments-section">
+                    <h3>댓글</h3>
+                    <form action="/noticeboard/comment/<%= post.post_id %>" method="POST">
+                        <textarea name="c_description" rows="4" cols="50" placeholder="댓글을 입력하세요"></textarea>
+                        <button type="submit">댓글 작성</button>
+                    </form>
+
+                    <div id="comments-list">
+                        <% if (post.comments && post.comments.length > 0) { %>
+                            <ul>
+                                <% post.comments.forEach(comment => { %>
+                                    <li>
+                                        <p><strong><%= comment.user_id %>:</strong> <%= comment.c_description %></p>
+                                        <p><small><%= new Date(comment.write_time).toLocaleString() %></small></p>
+                                    </li>
+                                <% }) %>
+                            </ul>
+                        <% } else { %>
+                            <p>댓글이 없습니다.</p>
+                        <% } %>
+                    </div>
+                </div>
             </article>
         </div>
     </div>
