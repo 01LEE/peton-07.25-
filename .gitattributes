@@ -1,12 +1,10 @@
 # 모든 텍스트 파일에 대해 자동으로 줄 끝 변환
 * text=auto
-
 # 특정 파일 유형에 대해 CRLF로 변환
 *.txt text eol=crlf
-
 # 특정 파일 유형에 대해 LF로 변환
 *.sh text eol=lf
-
 # 이미지 파일 등 바이너리 파일은 변환하지 않음
 *.jpg binary
 *.png binary
+*.exe filter=lfs diff=lfs merge=lfs -text
