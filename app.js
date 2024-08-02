@@ -53,8 +53,8 @@ app.use('/', profileRouter);
 // app.use('/', userfindRouter);
 
 
-app.listen(port, '192.168.147.1', () => {
-  console.log(`Server running at http://192.168.147.1:${port}/`);
+app.listen(port, '192.168.248.1', () => {
+  console.log(`Server running at http://192.168.248.1:${port}/`);
 });
 
 
