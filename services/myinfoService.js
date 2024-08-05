@@ -4,12 +4,9 @@ const db = require('../db');
 exports.getMyInfo = (req, res) => {
   const query = `
     SELECT 
-      user.user_id, user.login_id, user.nick_name, user.password, user.create_time, user.update_time, user.user_intro, user.pw_update_time, user.pw_find, user.email, user.profile_image_url,
-      pet.pet_name, pet.pet_breed, pet.pet_age, pet.pet_intro
-    FROM user 
-    LEFT JOIN pet ON user.user_id = pet.user_id
-    WHERE user.login_id = ?
-  `;
+      user.user_id, user.login_id, user.nick_name, user.password, user.create_time, user.update_time, user.user_intro, user.pw_update_time, user.pw_find, user.email, user.profile_image_url
+      FROM user
+      WHERE user.login_id = ?`;
   db.query(query, [req.session.login_id], (err, results) => {
     if (err) {
       console.error("내 정보 조회 중 에러 발생: ", err);
@@ -18,8 +15,7 @@ exports.getMyInfo = (req, res) => {
     }
 
     const userInfo = results.length > 0 ? results[0] : {};
-    const pets = results.filter(result => result.pet_id !== null)
-    res.render('myinfo', { myInfos: [userInfo], pets: pets });
+    res.render('myinfo', { myInfos:[userInfo]});
   });
 };
 
@@ -44,19 +40,21 @@ exports.renderaddpet = (req, res) => {
   res.render('addpet'); // 'addpet' 템플릿을 렌더링
 };
 
+
 exports.updateaddpet = (req, res) => {
-  console.log('Adding pet:', req.body);
+  console.log('Adding pet:', req.body); // 디버깅 로그 추가
 
   const { pet_name, pet_breed, pet_age, pet_intro, pet_image_url } = req.body;
   const userId = req.session.userid;
   console.log('세션에서 가져온 userId:', userId);
 
   if (!userId) {
-    console.log(userId);
     return res.status(400).send('사용자 정보가 없습니다. 로그인 후 다시 시도해주세요.');
   }
 
-  db.query('INSERT INTO pet (user_id, pet_name, pet_breed, pet_age, pet_intro, pet_image_url) VALUES (?, ?, ?, ?, ?, ?)', [userId, pet_name, pet_breed, pet_age, pet_intro,pet_image_url], (err, results) => {
+  const query = 'INSERT INTO pet (user_id, pet_name, pet_breed, pet_age, pet_intro, pet_image_url) VALUES (?, ?, ?, ?, ?, ?)';
+
+  db.query(query, [userId, pet_name, pet_breed, pet_age, pet_intro, pet_image_url], (err, results) => {
     if (err) {
       console.error('Database query error:', err);
       return res.status(500).send('서버 오류가 발생했습니다.');
@@ -122,23 +120,32 @@ exports.petdetail = (req, res) => {
 
 // };
 
-exports.updatepetdetail = (req,res) => {
+exports.updatepetdetail = (req, res) => {
   const petId = req.params.pet_id;
   const { pet_name, pet_breed, pet_age, pet_intro } = req.body;
 
+  let query = `
+    UPDATE pet
+    SET pet_name = ?, pet_breed = ?, pet_age = ?, pet_intro = ?`;
 
-  const query = `
-  UPDATE pet
-    SET pet_name = ?, pet_breed = ?, pet_age = ?, pet_intro = ?
-    WHERE pet_id = ?
-  `;
+  const queryParams = [pet_name, pet_breed, pet_age, pet_intro];
 
-  db.query(query, [pet_name, pet_breed, pet_age, pet_intro, petId], (err, results) => {
+  // 이미지 파일이 업로드된 경우 이미지 URL도 업데이트
+  if (req.file) {
+    const pet_image_url = req.body.pet_image_url;
+    query += `, pet_image_url = ?`;
+    queryParams.push(pet_image_url);
+  }
+
+  query += ` WHERE pet_id = ?`;
+  queryParams.push(petId);
+
+  db.query(query, queryParams, (err, results) => {
     if (err) {
       console.error('Database update error:', err);
       return res.status(500).send('서버 오류가 발생했습니다.');
     }
-    res.redirect('/mypets');
+    res.redirect(`/pet/${petId}`);
   });
 };
 
@@ -184,3 +191,23 @@ exports.deleteuser = (req, res) => {
     });
   });
 };
+
+exports.updatePetImage = (req, res) => {
+  const petId = req.params.pet_id;
+  const pet_image_url = req.body.pet_image_url;
+
+  const query = `
+    UPDATE pet
+    SET pet_image_url = ?
+    WHERE pet_id = ?
+  `;
+
+  db.query(query, [pet_image_url, petId], (err, results) => {
+    if (err) {
+      console.error('Database update error:', err);
+      return res.status(500).send('서버 오류가 발생했습니다.');
+    }
+    res.redirect(`/pet/${petId}`);
+  });
+};
+
