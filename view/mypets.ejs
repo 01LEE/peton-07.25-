@@ -25,7 +25,7 @@
       <% for (let i = 0; i < pets.length; i++) { %>
         <div class="pet-card">
           <h2>Pet <%= i + 1 %></h2>
-          <p><strong>image:</strong><img src="<%= pets[0].pet_image_url %>"></p>
+          <p><strong>image:</strong><img src="<%= pets[i].pet_image_url %>" alt="Pet Image"></p>
           <p><strong>Name:</strong> <%= pets[i].pet_name %></p>
           <p><strong>Breed:</strong> <%= pets[i].pet_breed %></p>
           <p><strong>Age:</strong> <%= pets[i].pet_age %></p>
@@ -39,6 +39,6 @@
   </div>
   
   <button onclick="location.href='/myinfo'" class="btn">Back to My Info</button>
-  <button onclick="location.href='/addpet'" class="btn">add pet</button>
+  <button onclick="location.href='/addpet'" class="btn">Add Pet</button>
 </body>
 </html>

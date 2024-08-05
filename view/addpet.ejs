@@ -8,13 +8,8 @@
 </head>
 <body>
   <div class="container">
-    <h1>Upload Profile Image</h1>
-    <form action="/upload" method="POST" enctype="multipart/form-data">
-        <label for="profileImage">Choose a profile image:</label>
-        <input type="file" id="profileImage" name="profileImage" accept="image/*" required>
-        <button type="submit" class="btn">Upload</button>
     <h1>Add Pet</h1>
-    <form action="/addpet" method="POST">
+    <form action="/petupload" method="POST" enctype="multipart/form-data">
       <label for="pet_name">Pet Name:</label>
       <input type="text" id="pet_name" name="pet_name" required>
       <label for="pet_breed">Pet Breed:</label>
@@ -23,8 +18,10 @@
       <input type="text" id="pet_age" name="pet_age" required>
       <label for="pet_intro">Pet Intro:</label>
       <input type="text" id="pet_intro" name="pet_intro" required>
-        <button type="submit" class="btn">Add Pet</button>
+      <label for="petImage">Choose a profile image:</label>
+      <input type="file" id="petImage" name="petImage" accept="image/*" required>
+      <button type="submit" class="btn" onclick="location.href = '/mypets'">Add Pet</button>
     </form>
-</div>
+  </div>
 </body>
 </html>

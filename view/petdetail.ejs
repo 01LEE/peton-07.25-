@@ -24,10 +24,11 @@
     <h2><%= pet.pet_name %></h2>
     <p><strong>Breed:</strong> <%= pet.pet_breed %></p>
     <p><strong>Age:</strong> <%= pet.pet_age %></p>
-    <p><strong>Intro:</strong> <%= pet.pet_intro %></p>
+    <p><strong>Intro:</strong> <%= pet.pet_intro %></p>    
+    <p><strong>Image:</strong><img src="<%= pet.pet_image_url %>" alt="Pet Image"></p>
   </div>
 
-  <!-- Update form -->
+  <!-- Update Pet Details form -->
   <form action="<%= pet.pet_id %>" method="POST" class="update-form">
     <h3>Update Pet Details</h3>
     <label for="pet_name">Name:</label>
@@ -41,8 +42,16 @@
     
     <label for="pet_intro">Intro:</label>
     <input type="text" id="pet_intro" name="pet_intro" value="<%= pet.pet_intro %>" required>
-    
+
     <button type="submit" class="btn">Update Pet</button>
+  </form>
+
+  <!-- Update Pet Image form -->
+  <form action="/updatepetimage/<%= pet.pet_id %>" method="POST" enctype="multipart/form-data" class="update-image-form">
+    <h3>Update Pet Image</h3>
+    <label for="petImage">Update Image:</label>
+    <input type="file" id="petImage" name="petImage" accept="image/*" required>
+    <button type="submit" class="btn">Update Image</button>
   </form>
 
   <!-- Delete form -->
