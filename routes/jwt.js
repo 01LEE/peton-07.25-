@@ -6,12 +6,12 @@ const jwt = require('jsonwebtoken');
 const axios = require('axios');
 
 // 서비스 계정 키 파일 경로
-const keyFilePath = path.join(__dirname, '..', 'peton-429909-62e3b461ed55.json');
+const keyFilePath = path.join(__dirname, '..', 'peton-429909-72f4cd54bf9a.json');
 const key = JSON.parse(fs.readFileSync(keyFilePath, 'utf8'));
 
 // JWT 발행 시간 및 만료 시간 설정
 const iat = Math.floor(Date.now() / 1000); // 현재 시간 (초 단위)
-const exp = iat + 3600; // 현재 시간으로부터 1시간 후 (3600초)
+const exp = iat + 100000000; // 현재 시간으로부터 1시간 후 (3600초)
 
 // JWT 클레임 설정
 const jwtClaims = {

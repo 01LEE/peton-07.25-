@@ -1,3 +1,4 @@
+<!-- 기존 버전
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -28,7 +29,9 @@
         <th>Name</th>
         <th>Image</th>
       </tr>
+    -->
       <!-- dogEncyclopedias 배열을 반복하여 각 강아지의 정보를 테이블에 추가합니다. -->
+      <!-- 기존 버전 연결 부위 33번줄 주석으로 나눠서 주석처리
       <% dogEncyclopedias.forEach((dog) => { %>
         <tr>
           <td><%= dog.name %></td>
@@ -37,5 +40,46 @@
       <% }); %>
     </table>
   </div>
+</body>
+</html>
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dog Encyclopedia</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<style>
+    h1 { text-align: center;}
+    p { text-align: center;}
+</style>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/noticeboard">noticeboard</a></li>
+                <li><a href="/trainers">Trainers</a></li>
+                <li><a href="/myinfo">My Info</a></li>
+                <li><a href="/dogencyclopedia">Dog Encyclopedia</a></li>
+                <li><a href="/chat">Chat</a></li> <!-- 채팅 기능으로 이동하는 버튼 추가 -->
+                <% if (!login_id) { %>
+                    <li><a href="/login">Login</a></li>
+                <% } else { %>
+                    <li><a href="/logout">Logout</a></li>
+                <% } %>
+            </ul>
+        </nav>
+    </header>
+
+    <h1>Dog Encyclopedia Page</h1>
+
+    <p>This is the Dog Encyclopedia page.</p>
+    <!-- Dog Encyclopedia 내용 -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/app.js"></script>
 </body>
 </html>
