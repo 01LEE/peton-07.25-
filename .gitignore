@@ -1,0 +1,4 @@
+sessions/
+node_modules/
+my-gcs-app/
+nodemailer_test/
