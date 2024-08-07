@@ -4,7 +4,7 @@ const Multer = require('multer');
 const db = require('../db');
 
 const storage = new Storage({
-  keyFilename: path.join(__dirname, '../peton-429909-72f4cd54bf9a.json'),
+  keyFilename: path.join(__dirname, 'peton-429909-72f4cd54bf9a.json'),
   projectId: 'peton-429909',
 });
 
