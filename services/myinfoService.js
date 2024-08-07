@@ -33,6 +33,7 @@ exports.updateMyInfo = (req, res) => {
           res.send('<script>alert("정보 수정 성공!"); window.location.href = "/myinfo";</script>');
         });
       }
+      
    
 
 exports.renderaddpet = (req, res) => {
