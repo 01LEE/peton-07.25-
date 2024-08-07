@@ -1,3 +1,4 @@
+// app.js 파일
 const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
@@ -40,6 +41,7 @@ app.use(cors({
   credentials: true
 }));
 
+// 미들웨어 설정
 // 미들웨어 설정
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
@@ -107,5 +109,7 @@ app.get('/ping', (req, res) => {
   res.sendStatus(200);
 });
 
+module.exports = app;
+module.exports.sessionMiddleware = sessionMiddleware; // 세션 미들웨어 내보내기
 module.exports = app;
 module.exports.sessionMiddleware = sessionMiddleware; // 세션 미들웨어 내보내기
