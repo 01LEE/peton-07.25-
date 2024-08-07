@@ -51,6 +51,6 @@ app.use('/', dogencyclopediaRouter);
 app.use('/', profileRouter);
 app.use('/jwt', jwtRouter); // 추가된 부분
 
-app.listen(port, '192.168.147.1', () => {
-  console.log(`Server running at http://192.168.147.1:${port}/`);
+app.listen(port, '192.168.248.1', () => {
+  console.log(`Server running at http://192.168.248.1:${port}/`);
 });
