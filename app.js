@@ -7,6 +7,7 @@ const FileStore = require('session-file-store')(session);
 const app = express();
 const port = 3000;
 const ip = require('ip');
+
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -36,9 +37,7 @@ const dogencyclopediaRouter = require('./routes/dogencyclopedia');
 const ID_findRouter = require('./routes/userfind/ID_find');
 const PW_findRouter = require('./routes/userfind/PW_find');
 const profileRouter = require('./routes/profile');
-
-
-// const userfind = require('./routes/userfind');
+const jwtRouter = require('./routes/jwt'); // 추가된 부분
 
 app.use('/', PW_findRouter);
 app.use('/', ID_findRouter);
@@ -50,11 +49,8 @@ app.use('/', trainerRouter);
 app.use('/', myinfoRouter);
 app.use('/', dogencyclopediaRouter);
 app.use('/', profileRouter);
-// app.use('/', userfindRouter);
-
+app.use('/jwt', jwtRouter); // 추가된 부분
 
 app.listen(port, '192.168.147.1', () => {
   console.log(`Server running at http://192.168.147.1:${port}/`);
 });
-
-
