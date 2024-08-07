@@ -1,4 +1,6 @@
 // services/activeUsersService.js
+
+// 현재 접속중인 유저 조회 user 테이블 및 sessions 테이블 조인
 const db = require('../db');
 
 exports.getActiveUsers = (callback) => {

@@ -17,4 +17,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
   setInterval(checkServerStatus, 5000);
 });
-  

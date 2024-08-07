@@ -1,3 +1,54 @@
+<!-- 1.1 -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat Room List</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header>
+    <nav>
+      <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/noticeboard">noticeboard</a></li>
+          <li><a href="/trainers">Trainers</a></li>
+          <li><a href="/myinfo">My Info</a></li>
+          <li><a href="/dogencyclopedia">Dog Encyclopedia</a></li>
+          <li><a href="/chatlist">Chat</a></li>
+          <li><a href="/users">Users</a></li>
+          <% if (!login_id) { %>
+              <li><a href="/login">Login</a></li>
+          <% } else { %>
+              <li><a href="/logout">Logout</a></li>
+          <% } %>
+      </ul>
+  </nav>
+  </header>
+  <div id="chat-container" class="container">
+    <ul id="chat-room-list" class="content">
+      <% chatRooms.forEach(chatRoom => { %>
+        <li>
+          <a href="/chat?roomId=<%= chatRoom.id %>"><%= chatRoom.other_user_name %></a>
+        </li>
+      <% }) %>
+    </ul>
+    <button id="create-chat-room">Create Chat Room</button>
+    <button id="confirm-delete" style="display:none;">Confirm Delete</button>
+    <button id="delete-chat-room">Delete Chat Room</button>
+    <button id="cancel-delete" style="display:none;">Cancel</button>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/chatlist.js"></script>
+  <script src="/app.js"></script>
+
+</body>
+</html>
+
+
+<!-- 1.0 ~ 0806
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,14 +59,35 @@
 </head>
 <body>
   <header>
-    <h1>Chat Rooms</h1>
+    <nav>
+      <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/noticeboard">noticeboard</a></li>
+          <li><a href="/trainers">Trainers</a></li>
+          <li><a href="/myinfo">My Info</a></li>
+          <li><a href="/dogencyclopedia">Dog Encyclopedia</a></li>
+          <li><a href="/chatlist">Chat</a></li>
+          <li><a href="/users">Users</a></li>
+          <% if (!login_id) { %>
+              <li><a href="/login">Login</a></li>
+          <% } else { %>
+              <li><a href="/logout">Logout</a></li>
+          <% } %>
+      </ul>
+  </nav>
   </header>
   <div id="chat-container" class="container">
     <ul id="chat-room-list" class="content"></ul>
-    <button id="create-chat-room" class="button">Create Chat Room</button>
+    <button id="create-chat-room">Create Chat Room</button>
+    <button id="confirm-delete" style="display:none;">Confirm Delete</button>
+    <button id="delete-chat-room">Delete Chat Room</button>
+    <button id="cancel-delete" style="display:none;">Cancel</button>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script src="/chatlist.js"></script> <!-- chatlist.js 파일을 사용 -->
+  <script src="/chatlist.js"></script>
+  <script src="/app.js"></script>
+
 </body>
 </html>
+-->

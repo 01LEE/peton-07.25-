@@ -69,8 +69,9 @@ const db = require('./db');
 const isAuthenticated = require('./middlewares/isAuthenticated');
 const sessionremember = require('./middlewares/sessionremember');
 const scrollBlocker = require('./middlewares/scrollBlocker');
+const cors = require('cors');
 const app = express();
-const ip = require('ip');
+// const ip = require('ip'); 미사용 주석 처리
 
 // 세션 디렉토리 확인 및 생성
 const sessionDir = path.join(__dirname, 'sessions');
@@ -78,12 +79,32 @@ if (!fs.existsSync(sessionDir)) {
   fs.mkdirSync(sessionDir);
 }
 
+
+
+// 세션 미들웨어 설정
+
+const sessionMiddleware = session({
+  secret: 'keyboard cat',
+  resave: false,
+  saveUninitialized: true,
+  store: new FileStore({
+    path: sessionDir
+  })
+});
+
+
+app.use(sessionMiddleware); // 세션 미들웨어 적용
+
+// 세션 미들웨어를 외부에서 접근할 수 있도록 설정
+app.set('sessionMiddleware', sessionMiddleware);
+
+// 미들웨어 설정
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser());
-app.use(express.static('public'));
+
 app.use(session({
   secret: 'keyboard cat',
   resave: false,
@@ -91,7 +112,15 @@ app.use(session({
   store: new FileStore({
     path: sessionDir
   })
+})); // 기존 중복 코드 주석 처리
+
+app.use(cors({
+  origin: 'http://localhost:3000',
+  methods: ['GET', 'POST', 'DELETE'],
+  credentials: true
 }));
+
+// app.use(express.static('public')); 중복 코드 주석 처리
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'view'));
@@ -134,4 +163,10 @@ app.get('/', (req, res) => {
   res.render('home', {title: 'Home Page '}); // EJS 템플릿 렌더링
 });
 
+// 08-06 추가
+app.get('/ping', (req, res) => {
+  res.sendStatus(200);
+});
+
 module.exports = app;
+module.exports.sessionMiddleware = sessionMiddleware; // 세션 미들웨어 내보내기

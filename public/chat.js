@@ -12,65 +12,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const chatRoomList = document.getElementById('chat-room-list');
   const createChatRoomButton = document.getElementById('create-chat-room');
 
-  let currentUser = '';
-  let chatRoomId = '';
+  let currentUser = null;
+  let chatRoomId = null;
 
-
-  // URL에서 채팅방 ID 추출
-  const urlParams = new URLSearchParams(window.location.search);
-  chatRoomId = urlParams.get('roomId');
-
-  if (chatRoomId) {
-    socket.emit('joinRoom', chatRoomId);
-  }
-
-  
-  sendButton.addEventListener('click', () => {
-    const message = messageInput.value;
-    if (message.trim() === '') return; // 빈 메시지 무시
-    
-
-    const chatMessage = {
-      roomId: chatRoomId,
-      sender: currentUser,
-      message: message
-    };
-
-  socket.emit('sendMessage', chatMessage);
-    messageInput.value = '';
-    addMessageToChat(chatMessage, 'sender');
-  });
-  
-  socket.on('message', (data) => {
-    // 내가 보낸 메시지인지 확인하여 중복 추가 방지
-    if (data.sender !== currentUser) {
-      addMessageToChat(data, 'receiver');
-    }
-  });
-
-  const addMessageToChat = (data, type) => {
-      const messageWrapper = document.createElement('div');
-      messageWrapper.classList.add('message-wrapper');
-      messageWrapper.classList.add(type);
-
-      if (type === 'receiver') {
-        const usernameElement = document.createElement('div');
-        usernameElement.classList.add('username');
-        usernameElement.textContent = data.sender;
-        messageWrapper.appendChild(usernameElement);
-      }
-
-      const messageElement = document.createElement('div');
-      messageElement.classList.add('message');
-      messageElement.classList.add(type);
-      messageElement.textContent = data.message;
-      messageWrapper.appendChild(messageElement);
-
-      messagesContainer.appendChild(messageWrapper);
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-  };
-
+  // 채팅방 입장 함수
   const joinChatRoom = (roomId) => {
+    console.log(`Joining chat room: ${roomId}`);
     fetch('/getCurrentUser')
       .then(response => response.json())
       .then(data => {
@@ -80,7 +27,9 @@ document.addEventListener('DOMContentLoaded', () => {
       })
       .catch(error => console.error('Error fetching current user:', error));
   };
+
   
+  // 메시지 로드 함수
   const loadMessages = (roomId) => {
     fetch(`/messages?roomId=${roomId}`)
       .then(response => response.json())
@@ -93,10 +42,73 @@ document.addEventListener('DOMContentLoaded', () => {
       })
       .catch(error => console.error('Error fetching messages:', error));
   };
+  
+  // 메시지를 채팅에 추가하는 함수
+  const addMessageToChat = (data, type) => {
+      const messageWrapper = document.createElement('div');
+      messageWrapper.classList.add('message-wrapper', type);
+
+      if (type === 'receiver') {
+        const usernameElement = document.createElement('div');
+        usernameElement.classList.add('username');
+        usernameElement.textContent = data.sender;
+        messageWrapper.appendChild(usernameElement);
+      }
+
+      const messageElement = document.createElement('div');
+      messageElement.classList.add('message', type);
+      messageElement.textContent = data.message;
+      messageWrapper.appendChild(messageElement);
+
+      messagesContainer.appendChild(messageWrapper);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  };
+
+  // send 버튼 클릭 이벤트 리스너
+  sendButton.addEventListener('click', () => {
+    const message = messageInput.value.trim();
+    if (message === '') return; // 빈 메시지 무시
+
+  const chatMessage = {
+        roomId: chatRoomId,
+        sender: currentUser,
+        receiver: 'all', // 'receiver' 값을 설정. 필요에 따라 적절한 값을 설정
+        message: message
+      };
+
+  socket.emit('sendMessage', chatMessage);
+      messageInput.value = '';
+      addMessageToChat(chatMessage, 'sender');
+    });
+
+  // 메시지 수신 소켓 이벤트 리스너
+  socket.on('message', (data) => {
+    // 내가 보낸 메시지인지 확인하여 중복 추가 방지
+    if (data.sender !== currentUser) {
+      addMessageToChat(data, 'receiver');
+    }
+  });
+
+  // 대화 내용 삭제 버튼 클릭 이벤트 리스너
+  clearButton.addEventListener('click', () => {
+    fetch('/clearMessages', { method: 'DELETE' }) // 서버에 대화 내용 모두 지우기 요청
+      .then(() => {
+        messagesContainer.innerHTML = ''; // 클라이언트에서 대화 내용 모두 지우기
+      })
+      .catch(error => console.error('Error clearing messages:', error));
+  });
+
+  // URL에서 채팅방 ID 추출 및 입장
+  const urlParams = new URLSearchParams(window.location.search);
+  chatRoomId = urlParams.get('roomId');
+  console.log(`Extracted roomId from URL: ${chatRoomId}`);
 
 
+  if (chatRoomId) {
+    joinChatRoom(chatRoomId);
+  }
 
-  // 현재 사용자 정보를 가져와서 저장
+  
   fetch('/getCurrentUser')
     .then(response => {
       if (!response.ok) {
@@ -111,46 +123,6 @@ document.addEventListener('DOMContentLoaded', () => {
     .catch(error => {
       console.error('Error fetching current user:', error);
     });
-    
-    fetch('/getCurrentUser')
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then(data => {
-        const { sender, receiver } = data;
-        const chatMessage = {
-          sender: sender,
-          receiver: receiver,
-          message: message
-        };
-        console.log('Sending message:', chatMessage);
-        socket.emit('sendMessage', chatMessage);
-        messageInput.value = '';
-        addMessageToChat(chatMessage, 'sender');
-      })
-      .catch(error => {
-        console.error('Error fetching current user:', error);
-      });
-  
-
-  clearButton.addEventListener('click', () => {
-    fetch('/clearMessages', { method: 'DELETE' }) // 서버에 대화 내용 모두 지우기 요청
-      .then(() => {
-        messagesContainer.innerHTML = ''; // 클라이언트에서 대화 내용 모두 지우기
-      })
-      .catch(error => console.error('Error clearing messages:', error));
-  });
-
-  
-
-  
-
-  
-
-  loadMessages();
 });
 
 // 버전 1.3
