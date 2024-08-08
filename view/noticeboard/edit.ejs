@@ -1,23 +1,22 @@
-<!-- views/form.ejs -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Post</title>
+    <title>Edit Post</title>
     <link rel="stylesheet" href="/styles.css">
     <style>
         .form-group {
             margin-bottom: 15px;
         }
-    
+
         .form-group label {
             display: block;
             font-weight: bold;
             margin-bottom: 5px;
             color: #333;
         }
-    
+
         .form-group input[type="text"],
         .form-group textarea {
             width: 100%;
@@ -28,13 +27,13 @@
             font-size: 16px;
             color: #333;
         }
-    
+
         .form-group input[type="text"]:focus,
         .form-group textarea:focus {
             border-color: #66afe9;
             outline: none;
         }
-    
+
         .form-group textarea {
             resize: vertical;
         }
@@ -54,18 +53,17 @@
     </header>
 
     <div class="container">
-        <h2>새로운 글</h2>
-        <form action="/form" method="POST" class="noticeboard-form">
+        <h2>글 수정</h2>
+        <form action="/noticeboard/edit/<%= post.post_id %>" method="POST" class="noticeboard-form">
             <div class="form-group">
                 <label for="title">제목:</label>
-                <input type="text" id="title" name="title" class="form-control" required>
+                <input type="text" id="title" name="title" value="<%= post.title %>" class="form-control" required>
             </div>
             <div class="form-group">
                 <label for="description">내용:</label>
-                <textarea id="description" name="description" class="form-control" rows="5" required></textarea>
+                <textarea id="description" name="description" class="form-control" rows="5" required><%= post.description %></textarea>
             </div>
-            <button type="submit" class="submit-btn">글 작성</button>
-            <button type="button" onclick="location.href='/noticeboard'">글 목록</button>
+            <button type="submit" class="submit-btn">글 수정</button>
         </form>
     </div>
 </body>

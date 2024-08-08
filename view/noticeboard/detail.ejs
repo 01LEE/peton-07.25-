@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post Detail</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/noticeboard">Noticeboard</a></li>
+                <li><a href="/trainers">Trainers</a></li>
+                <li><a href="/myinfo">My Info</a></li>
+                <li><a href="/dogencyclopedia">Dog Encyclopedia</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h2>상세 페이지</h2>
+        <button type="button" onclick="location.href='/noticeboard'">글 목록</button>
+        <div class="content">
+            <article>
+                <h2><%= post.title %></h2>
+                <p><strong>작성자:</strong> <%= post.nick_name %></p>
+                <p><strong>작성 시간:</strong> <%= new Date(post.write_time).toLocaleString() %></p>
+                <div>
+                    <h3>내용</h3>
+                    <p><%= post.description %></p>
+                </div>
+                <div>
+                    <strong><p>좋아요 : 3</p></strong>
+                    <button type="button">좋아요</button>
+                </div>
+                <button type="button" onclick="location.href='/noticeboard/edit/<%= post.post_id %>'">수정</button>
+                <form action="/noticeboard/delete/<%= post.post_id %>" method="POST">
+                    <button type="submit">삭제</button>
+                </form>
+
+                <div class="comments-section">
+                    <h3>댓글</h3>
+                    <form action="/noticeboard/comment/<%= post.post_id %>" method="POST">
+                        <textarea name="c_description" rows="4" cols="50" placeholder="댓글을 입력하세요"></textarea>
+                        <button type="submit">댓글 작성</button>
+                    </form>
+
+                    <div id="comments-list">
+                        <% if (comments && comments.length > 0) { %>
+                            <ul>
+                                <% comments.forEach(comment => { %>
+                                    <li>
+                                        <p><strong>User <%= comment.user_id %>:</strong> <%= comment.c_description %></p>
+                                        <p><small><%= new Date(comment.write_time).toLocaleString() %></small></p>
+                                        <form action="/noticeboard/comment/delete/<%= comment.id %>/<%= post.post_id %>" method="POST" style="display:inline;">
+                                            <button type="submit">삭제</button>
+                                        </form>
+                                        <form action="/noticeboard/comment/edit/<%= comment.id %>/<%= post.post_id %>" method="POST" style="display:inline;">
+                                            <input type="hidden" name="c_description" value="<%= comment.c_description %>">
+                                            <button type="submit">수정</button>
+                                        </form>
+                                        <button type="button">답글</button>
+                                    </li>
+                                <% }) %>
+                            </ul>
+                        <% } else { %>
+                            <p>댓글이 없습니다.</p>
+                        <% } %>
+                    </div>                    
+                </div>
+            </article>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,5 +1,3 @@
-list.ejs
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,6 +5,33 @@ list.ejs
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Community Page</title>
     <link rel="stylesheet" href="/styles.css">
+    <script>
+        function timeAgo(date) {
+            const now = new Date();
+            const diff = now - new Date(date);
+            const seconds = Math.floor(diff / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            if (days > 0) {
+                return days + '일 전';
+            } else if (hours > 0) {
+                return hours + '시간 전';
+            } else if (minutes > 0) {
+                return minutes + '분 전';
+            } else {
+                return seconds + '초 전';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.write-time').forEach(element => {
+                const date = element.getAttribute('data-time');
+                element.textContent = timeAgo(date);
+            });
+        });
+    </script>
 </head>
 <body>
     <header>
@@ -22,24 +47,31 @@ list.ejs
     </header>
 
     <div class="container">
-        <h2>Noticeboard</h2>
-        <div><a href="/noticeboard/form">Create a New Post</a></div>
+        <h2>자유게시판</h2>
+        <button type="button" onclick="location.href='/noticeboard/form'">글 쓰기</button>  
         <div class="content">
             <table>
                 <tr>
-                    <th>Name</th>
-                    <th>Title</th>
-                    <th>Description</th>
-                    <th>Write Time</th>
-                    <th>Update Time</th>
+                    <th>프로필</th>
+                    <th>제목</th>
+                    <th>내용</th>
+                    <th>작성 시간</th>
+                    <!-- <th>Update Time</th> -->
                 </tr>
                 <% noticeboard.forEach((post) => { %>
                     <tr>
                         <td><%= post.nick_name %></td>
-                        <td><%= post.title %></td>
-                        <td><%= post.description %></td>
-                        <td><%= new Date(post.write_time).toLocaleString() %></td>
-                        <td><%= new Date(post.update_time).toLocaleString() %></td>
+                        <td><a href="/noticeboard/<%= post.post_id %>"><%= post.title %></a></td>
+                        <td>
+                            <script>
+                                function truncateText(text, maxLength) {
+                                    return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+                                }
+                                document.write(truncateText('<%= post.description %>', 10)); // 내용을 10글자만 보이게함.
+                            </script>
+                        </td>
+                        <td class="write-time" data-time="<%= post.write_time %>"><%= new Date(post.write_time).toLocaleString() %></td>
+                        <!-- <td><%= new Date(post.update_time).toLocaleString() %></td> -->
                     </tr>
                 <% }); %>
             </table>
