@@ -3,6 +3,7 @@ const router = express.Router();
 const isAuthenticated = require('../middlewares/isAuthenticated');
 const isYoursNoticeboard = require('../middlewares/isYoursNoticeboard');
 const noticeboardService = require('../services/noticeboardService');
+
 const { not } = require('ip');
 
 // GET 요청: 게시판 목록을 렌더링
@@ -31,10 +32,16 @@ router.post('/noticeboard/edit/:post_id',isAuthenticated, noticeboardService.edi
 // POST 요청: 댓글 추가
 router.post('/noticeboard/comment/:post_id', isAuthenticated, noticeboardService.addComment);
 
-// 댓글 삭제
+// DELETE 요청: 댓글 삭제
 router.post('/noticeboard/comment/delete/:comment_id/:post_id', isAuthenticated, noticeboardService.deleteComment);
 
-// 댓글 수정
-router.post('/noticeboard/comment/edit/:comment_id/:post_id', isAuthenticated, noticeboardService.editComment);
+// // GET 요청: 댓글 수정
+// router.post('/noticeboard/comment/edit/:comment_id/:post_id', isAuthenticated, noticeboardService.editComment);
+
+// POST 요청: 대댓글 추가
+router.post('/noticeboard/recomment/:comment.id', isAuthenticated, noticeboardService.addRecomment);
+
+// // DELETE 요청: 대댓글 삭제
+// router.post('/noticeboard/recomment/delete/:comment.id', isAuthenticated, noticeboardService.deleteRecomment);
 
 module.exports = router;

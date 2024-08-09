@@ -48,13 +48,19 @@ exports.getPostDetail = (req, res) => {
     }
 
     // 댓글 목록 가져오기
-    noticeboardService.getComments(post_id, (err, comments) => {
+    noticeboardService.getComments(post_id, (err, comment) => {
       if (err) {
         console.error("댓글 조회 중 에러 발생: ", err);
         return res.status(500).send('서버 에러');
       }
-
-      res.render('noticeboard/detail', { post: results[0], comments });
+      noticeboardService.getRecomments(id, (err, recomment) => {
+        if (err) {
+          console.error("대댓글 조회 중 에러 발생: ", err);
+          return res.status(500).send('서버 에러');
+        }
+        const commentCount = comment.length;
+        res.render('noticeboard/detail', { post: results[0], comment, commentCount });
+      })
     });
   });
 };
@@ -150,7 +156,6 @@ exports.addComment = (req, res) => {
   });
 };
 
-
 // 게시물의 댓글을 가져오는 서비스 함수
 exports.getComments = (post_id, callback) => {
   db.query('SELECT * FROM comment WHERE post_id = ?', [post_id], (err, results) => {
@@ -162,19 +167,19 @@ exports.getComments = (post_id, callback) => {
   });
 };
 
-// 댓글을 수정하는 서비스 함수
-exports.editComment = (req, res) => {
-  const comment_id = req.params.comment_id;
-  const { c_description } = req.body;
+// // 댓글을 수정하는 서비스 함수
+// exports.editComment = (req, res) => {
+//   const comment_id = req.params.comment_id;
+//   const { c_description } = req.body;
 
-  db.query('UPDATE comment SET c_description = ?, update_time = NOW() WHERE id = ?', [c_description, comment_id], (err, result) => {
-    if (err) {
-      console.error('댓글 수정 중 에러 발생:', err);
-      return res.status(500).send('서버 에러');
-    }
-    res.redirect(`/noticeboard/${req.params.post_id}`);
-  });
-};
+//   db.query('UPDATE comment SET c_description = ?, update_time = NOW() WHERE id = ?', [c_description, comment_id], (err, result) => {
+//     if (err) {
+//       console.error('댓글 수정 중 에러 발생:', err);
+//       return res.status(500).send('서버 에러');
+//     }
+//     res.redirect(`/noticeboard/${req.params.post_id}`);
+//   });
+// };
 
 // 댓글을 삭제하는 서비스 함수
 exports.deleteComment = (req, res) => {
@@ -186,5 +191,32 @@ exports.deleteComment = (req, res) => {
       return res.status(500).send('서버 에러');
     }
     res.redirect(`/noticeboard/${req.params.post_id}`);
+  });
+};
+
+// 대댓글을 추가하는 서비스 함수
+exports.addRecomment = (req, res) => {
+  const comment_id = req.params.comment_id;
+  const { rc_description } = req.body;
+  const user_id = req.session.userid;
+
+  db.query('INSERT INTO recomment (comment_id, user_id, rc_description, write_time, update_time) VALUES (?, ?, ?, NOW(), NOW())',
+    [comment_id, user_id, rc_description], (err, result) => {
+    if (err) {
+      console.error('대댓글 추가 중 에러 발생:', err);
+      return res.status(500).send('서버 에러');
+    }
+    res.redirect(`/noticeboard/${post_id}`);
+  });
+};
+
+// 게시물의 대댓글을 가져오는 서비스 함수
+exports.getRecomments = (comment_id, callback) => {
+  db.query('SELECT * FROM recomment WHERE comment_id = ?', [id], (err, results) => {
+    if (err) {
+      console.error('대댓글 조회 중 에러 발생:', err);
+      return callback(err);
+    }
+    callback(null, results);
   });
 };
