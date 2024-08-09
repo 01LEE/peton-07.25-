@@ -1,6 +1,6 @@
 // HW
 
-// 1.4
+// 1.0 안정화 버전 0808 pm 09:42
 
 document.addEventListener('DOMContentLoaded', () => {
     const socket = io();

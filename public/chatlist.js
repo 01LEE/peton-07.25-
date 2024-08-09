@@ -1,4 +1,4 @@
-// 1.2 채팅방 ID 발신자_수신자로 설정   
+// 1.0 안정화 버전 0808 pm 09:42
 
 document.addEventListener('DOMContentLoaded', () => {
     const socket = io('http://localhost:3000'); // 서버 URL 및 포트 확인
@@ -24,23 +24,42 @@ document.addEventListener('DOMContentLoaded', () => {
       })
       .catch(error => console.error('Error fetching current user:', error));
   
+
+
+
+
+
     // 채팅방 목록을 가져와서 표시
-    // 1.3 ver 0806~
+    // 1.4 0808~
     const loadChatRooms = () => {
       fetch('/chatlist')
-        .then(response => response.json())
-        .then(chatRooms => {
-          chatRoomList.innerHTML = '';
-          chatRooms.forEach(chatRoom => {
-            const li = document.createElement('li');
-            li.innerHTML = `<a href="/chat?roomId=${chatRoom.id}">${chatRoom.other_user_name} (${chatRoom.title})</a>`;
-            li.dataset.roomId = chatRoom.id;
-            chatRoomList.appendChild(li);
-          });
+        .then(response => {
+          const contentType = response.headers.get('content-type');
+          if (!response.ok) {
+            if (contentType && contentType.includes('application/json')) {
+              return response.json().then(err => { throw err; });
+            } else {
+              throw new Error('Network response was not ok');
+            }
+          }
+          return response.text(); // JSON 대신 텍스트로 응답을 받음
+        })
+        .then(data => {
+          if (typeof data === 'string') {
+            // HTML 처리
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(data, 'text/html');
+            const chatRoomListElement = doc.getElementById('chat-room-list'); // ul 요소를 선택
+            if (chatRoomListElement) {
+              const chatRoomList = document.getElementById('chat-room-list');
+              chatRoomList.innerHTML = chatRoomListElement.innerHTML; // 기존 내용을 새로운 내용으로 대체
+            }
+          }
         })
         .catch(error => console.error('Error fetching chat rooms:', error));
     };
-  
+
+
     // 채팅방 목록 새로고침
     socket.on('refreshChatList', () => {
       loadChatRooms();

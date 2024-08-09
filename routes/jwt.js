@@ -26,7 +26,8 @@ const jwtClaims = {
 // JWT 생성
 const token = jwt.sign(jwtClaims, key.private_key, { algorithm: 'RS256' });
 
-console.log('Generated JWT:', token);
+console.log('토큰 정상 생성 완료');
+// console.log('Generated JWT:', token);
 
 // OAuth2 토큰 엔드포인트
 const tokenUrl = 'https://oauth2.googleapis.com/token';

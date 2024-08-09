@@ -1,6 +1,6 @@
 // public/users.js
 
-// 1.4 ~ 1.5 채팅하기 누를시 채팅방 생성 또는 이동
+// 1.0 안정화 버전 0808 pm 09:42
 
 document.addEventListener('DOMContentLoaded', () => {
     const userList = document.getElementById('userList');

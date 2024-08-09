@@ -1,13 +1,12 @@
 
-// 1.1 채팅방 유저 이름 설정 채팅방 id 발신자_수신자로 설정
+// 1.0 안정화 버전 0808 pm 09:42
 
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const isAuthenticated = require('../middlewares/isAuthenticated');
 
-// 채팅방 목록 페이지 렌더링
-// 1.2
+// 채팅방 목록 API 엔드포인트
 router.get('/chatlist', isAuthenticated, (req, res) => {
   const userId = req.session.userid; // 세션에서 사용자 ID를 가져옵니다.
 
@@ -21,11 +20,16 @@ router.get('/chatlist', isAuthenticated, (req, res) => {
   db.query(query, [userId, userId], (err, results) => {
     if (err) {
       console.error('Database query error:', err);
-      return res.status(500).json({ message: 'Database error' });
+      return res.status(500).json({ message: 'Database error' }); // 오류 발생시 JSON 반환
     }
 
-    // `chatRooms` 변수를 뷰로 전달합니다.
-    res.render('chatlist', { chatRooms: results });
+    res.render('chatlist', { chatRooms: results }, (err, html) => {
+      if (err) {
+        console.error('Render error:', err);
+        return res.status(500).json({ message: 'Render error' });
+      }
+      res.send(html); // 렌더링된 HTML을 응답으로 전송
+    });
   });
 });
 

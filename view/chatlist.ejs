@@ -1,4 +1,4 @@
-<!-- 1.1 -->
+<!-- 1.0 안정화 버전 0808 pm 09:42 -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -28,18 +28,18 @@
   </header>
   <div id="chat-container" class="container">
     <ul id="chat-room-list" class="content">
-      <% chatRooms.forEach(chatRoom => { %>
+      <% chatRooms.forEach(function(chatRoom) { %>
         <li data-room-id="<%= chatRoom.id %>">
           <a href="/chat?roomId=<%= chatRoom.id %>"><%= chatRoom.other_user_name %></a>
         </li>
-      <% }) %>
+      <% }); %>
     </ul>
     <button id="create-chat-room">Create Chat Room</button>
     <button id="confirm-delete" style="display:none;">Confirm Delete</button>
     <button id="delete-chat-room">Delete Chat Room</button>
     <button id="cancel-delete" style="display:none;">Cancel</button>
   </div>
-  <script src="/socket.io/socket.io.js"></script> <!-- socket.io 라이브러리 -->
+  <script src="/socket.io/socket.io.js"></script>
   <script src="/chatlist.js"></script>
   <script src="/app.js"></script>
 </body>

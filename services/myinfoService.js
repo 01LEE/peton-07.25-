@@ -1,5 +1,19 @@
 const { log } = require('console');
 const db = require('../db');
+const path = require('path');
+const fs = require('fs');
+
+const sessionDir = path.join(__dirname, '..', '../sessions');
+
+function checkSessionFiles() {
+  fs.readdir(sessionDir, (err, files) => {
+    if (err) {
+      console.error('세션 디렉토리 읽기 중 에러 발생: ', err);
+    } else {
+      console.log('현재 세션 파일 목록: ', files);
+    }
+  });
+}
 
 exports.getMyInfo = (req, res) => {
   const query = `
@@ -170,28 +184,57 @@ exports.deletepetdetail = (req,res) => {
 
 exports.deleteuser = (req, res) => {
   const userId = req.session.userid;
-  const petquery = 'DELETE FROM pet WHERE user_id = ?';
-  const userquery = 'DELETE FROM user WHERE user_id = ?';
 
-  db.query(petquery, [userId], (err, result) => {
+  req.session.destroy((err) => {
     if (err) {
-      console.error('Error deleting pets:', err);
-      return res.status(500).send('Server error deleting pets');
+      console.error("세션 파괴 중 에러 발생: ", err);
+      return res.status(500).send('서버 에러');
     }
 
-    console.log('Pets deleted successfully:', result);
+    console.log('세션 파괴 완료');
+    res.clearCookie('connect.sid', { path: '/' });
+    checkSessionFiles(); // 세션 파일 확인
 
-    db.query(userquery, [userId], (err, result) => {
+    const participantsQuery = 'DELETE FROM participants WHERE user_id = ?';
+    const sessionsQuery = 'DELETE FROM sessions WHERE user_id = ?';
+    const petsQuery = 'DELETE FROM pet WHERE user_id = ?';
+    const userQuery = 'DELETE FROM user WHERE user_id = ?';
+
+    db.query(participantsQuery, [userId], (err, result) => {
       if (err) {
-        console.error('Error deleting user:', err);
-        return res.status(500).send('Server error deleting user');
+        console.error('Error deleting participants:', err);
+        return res.status(500).send('Server error deleting participants');
       }
+      console.log('Participants deleted successfully:', result);
 
-      console.log('User deleted successfully:', result);
-      res.send('<script>alert("회원이 성공적으로 삭제되었습니다."); window.location.href = "/login";</script>');
+      db.query(sessionsQuery, [userId], (err, result) => {
+        if (err) {
+          console.error('Error deleting sessions:', err);
+          return res.status(500).send('Server error deleting sessions');
+        }
+        console.log('Sessions deleted successfully:', result);
+
+        db.query(petsQuery, [userId], (err, result) => {
+          if (err) {
+            console.error('Error deleting pets:', err);
+            return res.status(500).send('Server error deleting pets');
+          }
+          console.log('Pets deleted successfully:', result);
+
+          db.query(userQuery, [userId], (err, result) => {
+            if (err) {
+              console.error('Error deleting user:', err);
+              return res.status(500).send('Server error deleting user');
+            }
+            console.log('User deleted successfully:', result);
+            res.send('<script>alert("회원이 성공적으로 삭제되었습니다."); window.location.href = "/login";</script>');
+          });
+        });
+      });
     });
   });
 };
+
 
 exports.updatePetImage = (req, res) => {
   const petId = req.params.pet_id;
