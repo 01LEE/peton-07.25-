@@ -49,6 +49,13 @@
     <div class="container">
         <h2>자유게시판</h2>
         <button type="button" onclick="location.href='/noticeboard/form'">글 쓰기</button>  
+        <form id="sortForm" method="GET" action="/noticeboard">
+            <select name="order" id="order" onchange="document.getElementById('sortForm').submit()">
+                <option value="latest" <% if (order === 'latest') { %>selected<% } %>>최신순</option>
+                <option value="fav" <% if (order === 'fav') { %>selected<% } %>>인기순</option>
+                <option value="view" <% if (order === 'view') { %>selected<% } %>>조회순</option>
+            </select>
+        </form>        
         <div class="content">
             <table>
                 <tr>
@@ -56,6 +63,9 @@
                     <th>제목</th>
                     <th>내용</th>
                     <th>작성 시간</th>
+                    <th>댓글 수</th>
+                    <th>좋아요 수</th>
+                    <th>조회수</th> 
                     <!-- <th>Update Time</th> -->
                 </tr>
                 <% noticeboard.forEach((post) => { %>
@@ -72,9 +82,23 @@
                         </td>
                         <td class="write-time" data-time="<%= post.write_time %>"><%= new Date(post.write_time).toLocaleString() %></td>
                         <!-- <td><%= new Date(post.update_time).toLocaleString() %></td> -->
+                        <td><p><%= post.totalCommentsCount %></p></td>
+                        <td><p><%= post.likeCount %></p></td>
+                        <td><p><%= post.view_count %></p></td>
                     </tr>
                 <% }); %>
             </table>
+        </div>
+        <div class="pagination">
+            <% if (currentPage > 1) { %>
+                <a href="/noticeboard?page=<%= currentPage - 1 %>&order=<%= order %>">이전</a>
+            <% } %>
+            <% for (let i = 1; i <= totalPages; i++) { %>
+                <a href="/noticeboard?page=<%= i %>&order=<%= order %>" <% if (i === currentPage) { %>class="active"<% } %>><%= i %></a>
+            <% } %>
+            <% if (currentPage < totalPages) { %>
+                <a href="/noticeboard?page=<%= currentPage + 1 %>&order=<%= order %>">다음</a>
+            <% } %>
         </div>
     </div>
 </body>

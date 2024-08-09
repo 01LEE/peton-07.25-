@@ -3,17 +3,77 @@ const db = require('../db');
 const isYoursNoticeboard = require('../middlewares/isYoursNoticeboard');
 const noticeboardService = require('../services/noticeboardService');
 
-
 // 게시판 목록을 가져오는 서비스 함수
 exports.getNoticeboard = (req, res) => {
-  // db.query('SELECT * FROM noticeboard ORDER BY write_time DESC' 최신순
-  db.query('SELECT * FROM noticeboard', (err, results) => {
+  // 페이지와 정렬 옵션을 쿼리 문자열에서 가져옵니다.
+  const page = parseInt(req.query.page, 10) || 1; // 기본값으로 페이지 1
+  const order = req.query.order || 'latest'; // 기본값으로 'latest'
+
+  // 페이지당 항목 수
+  const pageSize = 10;
+  const offset = (page - 1) * pageSize;
+
+  // 정렬 쿼리를 결정합니다.
+  let orderByClause;
+  switch (order) {
+    case 'fav':
+      orderByClause = 'ORDER BY likeCount DESC';
+      break;
+    case 'view':
+      orderByClause = 'ORDER BY view_count DESC';
+      break;
+    case 'latest':
+    default:
+      orderByClause = 'ORDER BY write_time DESC';
+      break;
+  }
+
+  // 게시물 목록을 가져오는 쿼리
+  const query = `
+    SELECT 
+      n.*, 
+      (SELECT COUNT(*) FROM \`like\` l WHERE l.post_id = n.post_id) AS likeCount,
+      (SELECT COUNT(*) FROM comment c WHERE c.post_id = n.post_id) AS commentCount,
+      (SELECT COUNT(*) FROM recomment r WHERE r.comment_id IN (SELECT c.comment_id FROM comment c WHERE c.post_id = n.post_id)) AS recommentCount
+    FROM 
+      noticeboard n
+    ${orderByClause}
+    LIMIT ? OFFSET ?`;
+
+  // 총 게시물 수를 가져오는 쿼리
+  const countQuery = `
+    SELECT COUNT(*) AS total
+    FROM noticeboard`;
+
+  db.query(query, [pageSize, offset], (err, results) => {
     if (err) {
       console.error("게시판 조회 중 에러 발생: ", err);
-      res.status(500).send('서버 에러');
-      return;
+      return res.status(500).send('서버 에러');
     }
-    res.render('noticeboard/list', { noticeboard: results });
+
+    // 총 게시물 수를 가져옵니다.
+    db.query(countQuery, (err, countResults) => {
+      if (err) {
+        console.error("총 게시물 수 조회 중 에러 발생: ", err);
+        return res.status(500).send('서버 에러');
+      }
+
+      const totalItems = countResults[0].total;
+      const totalPages = Math.ceil(totalItems / pageSize);
+
+      // 댓글과 대댓글 수를 합산하여 totalCommentsCount를 계산합니다.
+      results.forEach(post => {
+        post.totalCommentsCount = post.commentCount + post.recommentCount;
+      });
+
+      // 결과를 렌더링합니다.
+      res.render('noticeboard/list', {
+        noticeboard: results,
+        currentPage: page,
+        totalPages: totalPages,
+        order: order
+      });
+    });
   });
 };
 
@@ -21,7 +81,6 @@ exports.getNoticeboard = (req, res) => {
 exports.createPost = (req, res) => {
   const { title, description } = req.body;
   const login_id = req.session.login_id;
-  console.log("글 생성 시 로그인 id :", login_id);
   db.query('INSERT INTO noticeboard (nick_name, title, description, user_id, write_time, update_time) VALUES ((SELECT nick_name from user where login_id =?), ?, ?, (SELECT user_id FROM user WHERE login_id = ?), NOW(), NOW())',
       [login_id, title, description,  login_id], (err, result) => {
       if (err) {
@@ -33,53 +92,111 @@ exports.createPost = (req, res) => {
 };
 
 // 게시물 상세 정보를 가져오는 서비스 함수
-
 exports.getPostDetail = (req, res) => {
-  const user_id = req.session.userid;
   const post_id = req.params.post_id;
 
-  const query = `
-  SELECT 
-    n.*, 
-    (SELECT COUNT(*) FROM \`like\` l WHERE l.post_id = n.post_id) AS likeCount
-  FROM 
-    noticeboard n
-  WHERE 
-    n.post_id = ?`;
+  // 게시물 조회 수를 증가시키는 쿼리
+  const incrementViewCountQuery = 'UPDATE noticeboard SET view_count = view_count + 1 WHERE post_id = ?';
 
-const commentQuery = `
-  SELECT 
-    c.*, 
-    (SELECT COUNT(*) FROM comment_like cl WHERE cl.comment_id = c.comment_id) AS likeCount,
-    (SELECT COUNT(*) FROM comment_unlike cu WHERE cu.comment_id = c.comment_id) AS dislikeCount
-  FROM 
-    comment c
-  WHERE 
-    c.post_id = ?`;
+  // 게시물 상세 정보를 가져오는 쿼리
+  const postQuery = `
+    SELECT 
+      n.*, 
+      (SELECT COUNT(*) FROM \`like\` l WHERE l.post_id = n.post_id) AS likeCount 
+    FROM 
+      noticeboard n 
+    WHERE 
+      n.post_id = ?`;
 
-db.query(query, [post_id], (err, results) => {
-  if (err) {
-    console.error("게시물 조회 중 에러 발생: ", err);
-    res.status(500).send('서버 에러');
-    return;
-  }
-  if (results.length === 0) {
-    return res.status(404).send('게시물이 존재하지 않습니다.');
-  }
+  // 댓글을 가져오는 쿼리
+  const commentQuery = `
+    SELECT 
+      c.*, 
+      (SELECT COUNT(*) FROM comment_like cl WHERE cl.comment_id = c.comment_id) AS likeCount,
+      (SELECT COUNT(*) FROM comment_unlike cu WHERE cu.comment_id = c.comment_id) AS dislikeCount
+    FROM 
+      comment c 
+    WHERE 
+      c.post_id = ?`;
 
-  const post = results[0];
+  // 댓글에 대한 답글(recomment)을 가져오는 쿼리
+  const recommentQuery = `
+    SELECT 
+      * 
+    FROM 
+      recomment 
+    WHERE 
+      comment_id = ?`;
 
-  // 댓글 목록 가져오기
-  db.query(commentQuery, [post_id], (err, commentResults) => {
+  // 게시물 조회 수를 증가시킵니다.
+  db.query(incrementViewCountQuery, [post_id], (err) => {
     if (err) {
-      console.error("댓글 조회 중 에러 발생: ", err);
+      console.error("게시물 조회 수 증가 중 에러 발생: ", err);
       return res.status(500).send('서버 에러');
     }
 
-    // 템플릿에 데이터 전달
-    res.render('noticeboard/detail', { post, likeCount: post.likeCount, comments: commentResults });
+    // 게시물 상세 정보를 가져옵니다.
+    db.query(postQuery, [post_id], (err, postResults) => {
+      if (err) {
+        console.error("게시물 조회 중 에러 발생: ", err);
+        return res.status(500).send('서버 에러');
+      }
+      if (postResults.length === 0) {
+        return res.status(404).send('게시물이 존재하지 않습니다.');
+      }
+      const post = postResults[0];
+
+      // 댓글을 가져옵니다.
+      db.query(commentQuery, [post_id], (err, commentResults) => {
+        if (err) {
+          console.error("댓글 조회 중 에러 발생: ", err);
+          return res.status(500).send('서버 에러');
+        }
+
+        // 댓글과 추가 댓글을 포함한 결과를 저장할 배열
+        const commentsWithRecomments = [];
+        let totalCommentsCount = 0;
+
+        // 각 댓글에 대해 추가 댓글을 가져오는 함수
+        const fetchRecomments = (index) => {
+          if (index >= commentResults.length) {
+            // 모든 댓글과 추가 댓글을 가져온 후 렌더링
+            return res.render('noticeboard/detail', { 
+              post, 
+              likeCount: post.likeCount, 
+              comments: commentsWithRecomments,
+              totalCommentsCount 
+            });
+          }
+
+          const comment = commentResults[index];
+
+          // 추가 댓글을 가져옵니다.
+          db.query(recommentQuery, [comment.comment_id], (err, recommentResults) => {
+            if (err) {
+              console.error("추가 댓글 조회 중 에러 발생: ", err);
+              return res.status(500).send('서버 에러');
+            }
+
+            // 댓글에 추가 댓글을 추가합니다.
+            comment.recomments = recommentResults;
+
+            // 댓글과 추가 댓글을 결과 배열에 추가합니다.
+            commentsWithRecomments.push(comment);
+
+            // 총 댓글 수를 업데이트합니다.
+            totalCommentsCount += 1 + recommentResults.length;
+
+            // 다음 댓글의 추가 댓글을 가져옵니다.
+            fetchRecomments(index + 1);
+          });
+        };
+
+        // 첫 번째 댓글의 추가 댓글을 가져오기 시작
+        fetchRecomments(0);
+      });
+    });
   });
-});
 };
 
 // 게시물을 삭제하는 서비스 함수
@@ -173,24 +290,12 @@ exports.addComment = (req, res) => {
   });
 };
 
-
-// 게시물의 댓글을 가져오는 서비스 함수
-exports.getComments = (post_id, callback) => {
-  db.query('SELECT * FROM comment WHERE post_id = ?', [post_id], (err, results) => {
-    if (err) {
-      console.error('댓글 조회 중 에러 발생:', err);
-      return callback(err);
-    }
-    callback(null, results);
-  });
-};
-
 // 댓글을 수정하는 서비스 함수
 exports.editComment = (req, res) => {
   const comment_id = req.params.comment_id;
   const { c_description } = req.body;
-
-  db.query('UPDATE comment SET c_description = ?, update_time = NOW() WHERE id = ?', [c_description, comment_id], (err, result) => {
+  
+  db.query('UPDATE comment SET c_description = ?, update_time = NOW() WHERE comment_id = ?', [c_description, comment_id], (err, result) => {
     if (err) {
       console.error('댓글 수정 중 에러 발생:', err);
       return res.status(500).send('서버 에러');
@@ -203,7 +308,7 @@ exports.editComment = (req, res) => {
 exports.deleteComment = (req, res) => {
   const comment_id = req.params.comment_id;
 
-  db.query('DELETE FROM comment WHERE id = ?', [comment_id], (err, result) => {
+  db.query('DELETE FROM comment WHERE comment_id = ?', [comment_id], (err, result) => {
     if (err) {
       console.error('댓글 삭제 중 에러 발생:', err);
       return res.status(500).send('서버 에러');
@@ -337,12 +442,21 @@ exports.commentlikeDown = (req, res) => {
   });
 };
 
+// 대댓글을 추가하는 서비스 함수
+exports.addRecomment = (req, res) => {
+  const comment_id = req.params.comment_id;  // 부모 댓글 ID
+  const post_id = req.params.post_id;        // 게시글 ID
+  const { rc_description } = req.body;       // 답글 내용
+  const user_id = req.session.userid;        // 현재 로그인된 사용자 ID
 
-
-//   db.query('INSERT INTO like (user_id, post_id) VALUES (?,?)', [userId, postId] (err, result) => {
-//     if (err) {
-//     console.error('좋아요 중 에러 발생',err);
-//     return res.status(404).send('서버 에러');
-//   }
-// })
-// };
+  // 답글을 데이터베이스에 추가하는 쿼리
+  db.query('INSERT INTO recomment (comment_id, user_id, rc_description, write_time, update_time) VALUES (?, ?, ?, NOW(), NOW())',
+    [comment_id, user_id, rc_description], (err, result) => {
+    if (err) {
+      console.error('답글 추가 중 에러 발생:', err);
+      return res.status(500).send('서버 에러');
+    }
+    // 답글 추가 후 게시글 상세 페이지로 리다이렉트
+    res.redirect(`/noticeboard/${post_id}`);
+  });
+};
