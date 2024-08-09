@@ -10,6 +10,10 @@
             display: none; /* 기본적으로 숨김 */
             margin-top: 10px;
         }
+        .edit-form {
+            display: none; /* 기본적으로 숨김 */
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -30,62 +34,62 @@
         <button type="button" onclick="location.href='/noticeboard'">글 목록</button>
         <div class="content">
             <article>
+                <p><small>자유게시판</small></p>
+                <hr>
                 <h2><%= post.title %></h2>
+                <hr>
                 <p><strong>작성자:</strong> <%= post.nick_name %></p>
                 <p><strong>작성 시간:</strong> <%= new Date(post.write_time).toLocaleString() %></p>
+                <p><strong>좋아요:</strong> <%= likeCount %></p>
+                <hr>
                 <div>
-                    <h3>내용</h3>
                     <p><%= post.description %></p>
                 </div>
-                <div>
-                    <strong><p>좋아요 : 3</p></strong>
-                    <button type="button">좋아요</button>
-                </div>
+                <hr>
+                <form action="/noticeboard/like/<%= post.post_id %>" method="POST">
+                    <button type="submit">좋아요</button>
+                </form>     
                 <button type="button" onclick="location.href='/noticeboard/edit/<%= post.post_id %>'">수정</button>
                 <form action="/noticeboard/delete/<%= post.post_id %>" method="POST">
                     <button type="submit">삭제</button>
                 </form>
-
+                <hr>
                 <div class="comments-section">
-                    <h3>댓글: <%=commentCount %></h3>
                     <form action="/noticeboard/comment/<%= post.post_id %>" method="POST">
                         <textarea name="c_description" rows="4" cols="50" placeholder="댓글을 입력하세요" required></textarea>
                         <button type="submit">댓글 작성</button>
                     </form>
 
                     <div id="comments-list">
-                        <% if (comment && comment.length > 0) { %>
+                        <% if (comments && comments.length > 0) { %>
                             <ul>
-                                <% comment.forEach(comment => { %>
+                                <% comments.forEach(comment => { %>
                                     <li>
-                                        <p><strong>User <%= comment.user_id %>:</strong> <%= comment.c_description %></p>
+                                        <p><strong>User <%= comment.user_id %>:</strong> <%= comment.c_description %></p> <strong><p>좋아요: <%= comment.likeCount %> | 싫어요: <%= comment.dislikeCount %></p></strong>
                                         <p><small><%= new Date(comment.write_time).toLocaleString() %></small></p>
                                         <form action="/noticeboard/comment/delete/<%= comment.id %>/<%= post.post_id %>" method="POST" style="display:inline;">
                                             <button type="submit">삭제</button>
                                         </form>
-                                        <form action="/noticeboard/comment/edit/<%= comment.id %>/<%= post.post_id %>" method="POST" style="display:inline;">
-                                            <input type="hidden" name="c_description" value="<%= comment.c_description %>">
-                                            <button type="submit">수정</button>
-                                        </form>
-
+                                        <button type="button" onclick="showEditForm('<%= comment.id %>')">수정</button>
                                         <button type="button" onclick="toggleReplyForm('<%= comment.id %>')">답글</button>
+                                        <div id="edit-form-<%= comment.id %>" class="edit-form">
+                                            <form action="/noticeboard/comment/edit/<%= comment.id %>/<%= post.post_id %>" method="POST">
+                                                <textarea name="c_description" rows="4" cols="50" required><%= comment.c_description %></textarea>
+                                                <button type="submit">수정 완료</button>
+                                                <button type="button" onclick="cancelEdit('<%= comment.id %>')">취소</button>
+                                            </form>
+                                        </div>
+                                        <form action="/noticeboard/post/<%= post.post_id %>/comment/like/<%= comment.comment_id %>" method="POST">
+                                            <button type="submit">좋아요</button>
+                                        </form>
+                                        <form action="/noticeboard/post/<%= post.post_id %>/comment/unlike/<%= comment.comment_id %>" method="POST">
+                                            <button type="submit">싫어요</button>
+                                        </form> 
                                         <div id="reply-form-<%= comment.id %>" class="reply-form">
                                             <form action="/noticeboard/recomment/<%= comment.id %>" method="POST">
                                                 <textarea name="rc_description" rows="4" cols="50" placeholder="답글을 입력하세요" required></textarea>
                                                 <button type="submit">답글 작성</button>
                                             </form>
-                                        </div>
-                                        <div id="recomments-list">
-                                            <% if (recomment && recomment.length > 0) { %>
-                                            <ul>
-                                                <% recomment.forEach(recomment => { %>
-                                                <li>
-                                                    <p><strong>User <%= recomment.user_id %>:</strong> <%= recomment.rc_description %></p>
-                                                    <p><small><%= new Date(recomment.write_time).toLocaleString() %></small></p>
-                                                </li>
-                                                <% }) %>
-                                            </ul>
-                                            <% } %>
                                         </div>
                                     </li>
                                 <% }) %>
@@ -93,7 +97,7 @@
                         <% } else { %>
                             <p>댓글이 없습니다.</p>
                         <% } %>
-                    </div>                    
+                    </div>                           
                 </div>
             </article>
         </div>
@@ -102,11 +106,21 @@
     <script>
         function toggleReplyForm(commentId) {
             var form = document.getElementById('reply-form-' + commentId);
-            if (form.style.display === 'none' || form.style.display === '') {
-                form.style.display = 'block';
-            } else {
-                form.style.display = 'none';
-            }
+            form.style.display = form.style.display === 'none' || form.style.display === '' ? 'block' : 'none';
+        }
+
+        function showEditForm(commentId) {
+            var commentContent = document.getElementById('comment-content-' + commentId);
+            var editForm = document.getElementById('edit-form-' + commentId);
+            commentContent.style.display = 'none';
+            editForm.style.display = 'block';
+        }
+
+        function cancelEdit(commentId) {
+            var commentContent = document.getElementById('comment-content-' + commentId);
+            var editForm = document.getElementById('edit-form-' + commentId);
+            commentContent.style.display = 'block';
+            editForm.style.display = 'none';
         }
     </script>
 </body>

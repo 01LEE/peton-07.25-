@@ -33,36 +33,53 @@ exports.createPost = (req, res) => {
 };
 
 // 게시물 상세 정보를 가져오는 서비스 함수
+
 exports.getPostDetail = (req, res) => {
   const user_id = req.session.userid;
   const post_id = req.params.post_id;
 
-  db.query('SELECT * FROM noticeboard WHERE post_id = ?', [post_id], (err, results) => {
+  const query = `
+  SELECT 
+    n.*, 
+    (SELECT COUNT(*) FROM \`like\` l WHERE l.post_id = n.post_id) AS likeCount
+  FROM 
+    noticeboard n
+  WHERE 
+    n.post_id = ?`;
+
+const commentQuery = `
+  SELECT 
+    c.*, 
+    (SELECT COUNT(*) FROM comment_like cl WHERE cl.comment_id = c.comment_id) AS likeCount,
+    (SELECT COUNT(*) FROM comment_unlike cu WHERE cu.comment_id = c.comment_id) AS dislikeCount
+  FROM 
+    comment c
+  WHERE 
+    c.post_id = ?`;
+
+db.query(query, [post_id], (err, results) => {
+  if (err) {
+    console.error("게시물 조회 중 에러 발생: ", err);
+    res.status(500).send('서버 에러');
+    return;
+  }
+  if (results.length === 0) {
+    return res.status(404).send('게시물이 존재하지 않습니다.');
+  }
+
+  const post = results[0];
+
+  // 댓글 목록 가져오기
+  db.query(commentQuery, [post_id], (err, commentResults) => {
     if (err) {
-      console.error("게시물 조회 중 에러 발생: ", err);
-      res.status(500).send('서버 에러');
-      return;
-    }
-    if (results.length === 0) {
-      return res.status(404).send('게시물이 존재하지 않습니다.');
+      console.error("댓글 조회 중 에러 발생: ", err);
+      return res.status(500).send('서버 에러');
     }
 
-    // 댓글 목록 가져오기
-    noticeboardService.getComments(post_id, (err, comment) => {
-      if (err) {
-        console.error("댓글 조회 중 에러 발생: ", err);
-        return res.status(500).send('서버 에러');
-      }
-      noticeboardService.getRecomments(id, (err, recomment) => {
-        if (err) {
-          console.error("대댓글 조회 중 에러 발생: ", err);
-          return res.status(500).send('서버 에러');
-        }
-        const commentCount = comment.length;
-        res.render('noticeboard/detail', { post: results[0], comment, commentCount });
-      })
-    });
+    // 템플릿에 데이터 전달
+    res.render('noticeboard/detail', { post, likeCount: post.likeCount, comments: commentResults });
   });
+});
 };
 
 // 게시물을 삭제하는 서비스 함수
@@ -156,6 +173,7 @@ exports.addComment = (req, res) => {
   });
 };
 
+
 // 게시물의 댓글을 가져오는 서비스 함수
 exports.getComments = (post_id, callback) => {
   db.query('SELECT * FROM comment WHERE post_id = ?', [post_id], (err, results) => {
@@ -167,19 +185,19 @@ exports.getComments = (post_id, callback) => {
   });
 };
 
-// // 댓글을 수정하는 서비스 함수
-// exports.editComment = (req, res) => {
-//   const comment_id = req.params.comment_id;
-//   const { c_description } = req.body;
+// 댓글을 수정하는 서비스 함수
+exports.editComment = (req, res) => {
+  const comment_id = req.params.comment_id;
+  const { c_description } = req.body;
 
-//   db.query('UPDATE comment SET c_description = ?, update_time = NOW() WHERE id = ?', [c_description, comment_id], (err, result) => {
-//     if (err) {
-//       console.error('댓글 수정 중 에러 발생:', err);
-//       return res.status(500).send('서버 에러');
-//     }
-//     res.redirect(`/noticeboard/${req.params.post_id}`);
-//   });
-// };
+  db.query('UPDATE comment SET c_description = ?, update_time = NOW() WHERE id = ?', [c_description, comment_id], (err, result) => {
+    if (err) {
+      console.error('댓글 수정 중 에러 발생:', err);
+      return res.status(500).send('서버 에러');
+    }
+    res.redirect(`/noticeboard/${req.params.post_id}`);
+  });
+};
 
 // 댓글을 삭제하는 서비스 함수
 exports.deleteComment = (req, res) => {
@@ -194,29 +212,137 @@ exports.deleteComment = (req, res) => {
   });
 };
 
-// 대댓글을 추가하는 서비스 함수
-exports.addRecomment = (req, res) => {
-  const comment_id = req.params.comment_id;
-  const { rc_description } = req.body;
-  const user_id = req.session.userid;
+exports.likeUP = (req, res) => {
+  const userId = req.session.userid;
+  const post_id = req.params.post_id;
 
-  db.query('INSERT INTO recomment (comment_id, user_id, rc_description, write_time, update_time) VALUES (?, ?, ?, NOW(), NOW())',
-    [comment_id, user_id, rc_description], (err, result) => {
+  // 좋아요가 이미 있는지 확인하는 쿼리
+  const checkQuery = 'SELECT * FROM `like` WHERE user_id = ? AND post_id = ?';
+
+  db.query(checkQuery, [userId, post_id], (err, results) => {
     if (err) {
-      console.error('대댓글 추가 중 에러 발생:', err);
+      console.error('좋아요 확인 중 에러 발생:', err);
       return res.status(500).send('서버 에러');
     }
-    res.redirect(`/noticeboard/${post_id}`);
+
+    if (results.length > 0) {
+      // 이미 좋아요가 있는 경우 삭제 쿼리 실행
+      const deleteQuery = 'DELETE FROM `like` WHERE user_id = ? AND post_id = ?';
+
+      db.query(deleteQuery, [userId, post_id], (err, result) => {
+        if (err) {
+          console.error('좋아요 삭제 중 에러 발생:', err);
+          return res.status(500).send('서버 에러');
+        }
+
+        return res.redirect(`/noticeboard/${post_id}`);
+      });
+    } else {
+      // 좋아요가 없는 경우 추가 쿼리 실행
+      const insertQuery = 'INSERT INTO `like` (user_id, post_id) VALUES (?, ?)';
+
+      db.query(insertQuery, [userId, post_id], (err, result) => {
+        if (err) {
+          console.error('좋아요 추가 중 에러 발생:', err);
+          return res.status(500).send('서버 에러');
+        }
+
+        return res.redirect(`/noticeboard/${post_id}`);
+      });
+    }
   });
 };
 
-// 게시물의 대댓글을 가져오는 서비스 함수
-exports.getRecomments = (comment_id, callback) => {
-  db.query('SELECT * FROM recomment WHERE comment_id = ?', [id], (err, results) => {
+exports.commentlikeUp = (req, res) => {
+  const userId = req.session.userid;
+  const comment_id = req.params.comment_id;
+  const post_id = req.params.post_id
+
+  // 좋아요가 이미 있는지 확인하는 쿼리
+  const checkQuery = 'SELECT * FROM comment_like WHERE user_id = ? AND comment_id = ?';
+
+  db.query(checkQuery, [userId, comment_id], (err, results) => {
     if (err) {
-      console.error('대댓글 조회 중 에러 발생:', err);
-      return callback(err);
+      console.error('좋아요 확인 중 에러 발생:', err);
+      return res.status(500).send('서버 에러');
     }
-    callback(null, results);
+
+    if (results.length > 0) {
+      // 이미 좋아요가 있는 경우 삭제 쿼리 실행
+      const deleteQuery = 'DELETE FROM comment_like WHERE user_id = ? AND comment_id = ?';
+
+      db.query(deleteQuery, [userId, comment_id], (err, result) => {
+        if (err) {
+          console.error('좋아요 삭제 중 에러 발생:', err);
+          return res.status(500).send('서버 에러');
+        }
+
+        return res.redirect(`/noticeboard/${post_id}`);
+      });
+    } else {
+      // 좋아요가 없는 경우 추가 쿼리 실행
+      const insertQuery = 'INSERT INTO comment_like (user_id, comment_id) VALUES (?, ?)';
+
+      db.query(insertQuery, [userId, comment_id], (err, result) => {
+        if (err) {
+          console.error('좋아요 추가 중 에러 발생:', err);
+          return res.status(500).send('서버 에러');
+        }
+
+        return res.redirect(`/noticeboard/${post_id}`);
+      });
+    }
   });
 };
+
+exports.commentlikeDown = (req, res) => {
+  const userId = req.session.userid;
+  const comment_id = req.params.comment_id;
+  const post_id = req.params.post_id
+
+  // 좋아요가 이미 있는지 확인하는 쿼리
+  const checkQuery = 'SELECT * FROM comment_unlike WHERE user_id = ? AND comment_id = ?';
+
+  db.query(checkQuery, [userId, comment_id], (err, results) => {
+    if (err) {
+      console.error('좋아요 확인 중 에러 발생:', err);
+      return res.status(500).send('서버 에러');
+    }
+
+    if (results.length > 0) {
+      // 이미 좋아요가 있는 경우 삭제 쿼리 실행
+      const deleteQuery = 'DELETE FROM comment_unlike WHERE user_id = ? AND comment_id = ?';
+
+      db.query(deleteQuery, [userId, comment_id], (err, result) => {
+        if (err) {
+          console.error('좋아요 삭제 중 에러 발생:', err);
+          return res.status(500).send('서버 에러');
+        }
+
+        return res.redirect(`/noticeboard/${post_id}`);
+      });
+    } else {
+      // 좋아요가 없는 경우 추가 쿼리 실행
+      const insertQuery = 'INSERT INTO comment_unlike (user_id, comment_id) VALUES (?, ?)';
+
+      db.query(insertQuery, [userId, comment_id], (err, result) => {
+        if (err) {
+          console.error('좋아요 추가 중 에러 발생:', err);
+          return res.status(500).send('서버 에러');
+        }
+
+        return res.redirect(`/noticeboard/${post_id}`);
+      });
+    }
+  });
+};
+
+
+
+//   db.query('INSERT INTO like (user_id, post_id) VALUES (?,?)', [userId, postId] (err, result) => {
+//     if (err) {
+//     console.error('좋아요 중 에러 발생',err);
+//     return res.status(404).send('서버 에러');
+//   }
+// })
+// };
