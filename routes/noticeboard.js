@@ -41,11 +41,11 @@ router.post('/noticeboard/comment/edit/:comment_id/:post_id', isAuthenticated, n
 // POST 요청: 대댓글 추가
 router.post('/noticeboard/recomment/:comment_id/:post_id', isAuthenticated, noticeboardService.addRecomment);
 
-// // POST 요청: 대댓글 삭제
-// router.post('/noticeboard/recomment/delete/:comment.id/:recomment_id', isAuthenticated, noticeboardService.deleteRecomment);
+// POST 요청: 대댓글 삭제
+router.post('/noticeboard/recomment/delete/:recomment_id/:post_id', isAuthenticated, noticeboardService.deleteRecomment);
 
 // // POST 요청: 대댓글 수정
-// router.post('/noticeboard/recomment/edit/:comment.id/:recomment_id', isAuthenticated, noticeboardService.editRecomment);
+// router.post('/noticeboard/recomment/edit/:recomment_id/:post_id', isAuthenticated, noticeboardService.editRecomment);
 
 // GET 요청: 좋아요 추가
 router.get('/noticeboard/like/:post_id', (req, res) => {

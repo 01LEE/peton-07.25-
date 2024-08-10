@@ -213,27 +213,48 @@ exports.deletePost = (req, res) => {
     if (results.length === 0) {
       return res.status(404).send('게시물이 존재하지 않습니다.');
     }
+
     // 권한 확인
     if (!isYoursNoticeboard(user_id, results[0].user_id)) {
       return res.redirect(`/noticeboard/${post_id}`);
-      // return res.status(403).send('권한이 없습니다.');
     }
 
-    // 댓글 삭제
-    db.query('DELETE FROM comment WHERE post_id = ?', [post_id], (err) => {
+    // 댓글을 조회하고 대댓글 삭제 후 댓글 삭제 및 게시글 삭제
+    db.query('SELECT comment_id FROM comment WHERE post_id = ?', [post_id], (err, commentResults) => {
       if (err) {
-        console.error('댓글 삭제 중 에러 발생:', err);
+        console.error('댓글 조회 중 에러 발생:', err);
         return res.status(500).send('서버 에러');
       }
 
-      // 게시글 삭제
-      db.query('DELETE FROM noticeboard WHERE post_id = ?', [post_id], (err, result) => {
-        if (err) {
-          console.error('게시글 삭제 중 에러 발생:', err);
-          return res.status(500).send('서버 에러');
-        }
-        res.redirect('/noticeboard');
-      });
+      // 대댓글 삭제
+      const comments = commentResults.map(row => row.comment_id);
+      
+      if (comments.length > 0) {
+        const commentIds = comments.map(() => '?').join(',');
+        db.query(`DELETE FROM recomment WHERE comment_id IN (${commentIds})`, comments, (err) => {
+          if (err) {
+            console.error('대댓글 삭제 중 에러 발생:', err);
+            return res.status(500).send('서버 에러');
+          }
+
+          // 댓글 삭제
+          db.query('DELETE FROM comment WHERE post_id = ?', [post_id], (err) => {
+            if (err) {
+              console.error('댓글 삭제 중 에러 발생:', err);
+              return res.status(500).send('서버 에러');
+            }
+
+            // 게시글 삭제
+            db.query('DELETE FROM noticeboard WHERE post_id = ?', [post_id], (err) => {
+              if (err) {
+                console.error('게시글 삭제 중 에러 발생:', err);
+                return res.status(500).send('서버 에러');
+              }
+              res.redirect('/noticeboard');
+            });
+          });
+        });
+      }
     });
   });
 };
@@ -308,11 +329,17 @@ exports.editComment = (req, res) => {
 exports.deleteComment = (req, res) => {
   const comment_id = req.params.comment_id;
 
-  db.query('DELETE FROM comment WHERE comment_id = ?', [comment_id], (err, result) => {
+  db.query('DELETE FROM recomment WHERE comment_id = ?', [comment_id], (err, results) => {
     if (err) {
-      console.error('댓글 삭제 중 에러 발생:', err);
+      console.error('대댓글 삭제 중 에러 발생:', err);
       return res.status(500).send('서버 에러');
     }
+    db.query('DELETE FROM comment WHERE comment_id = ?', [comment_id], (err, result) => {
+      if (err) {
+        console.error('댓글 삭제 중 에러 발생:', err);
+        return res.status(500).send('서버 에러');
+      }
+    })
     res.redirect(`/noticeboard/${req.params.post_id}`);
   });
 };
@@ -460,3 +487,16 @@ exports.addRecomment = (req, res) => {
     res.redirect(`/noticeboard/${post_id}`);
   });
 };
+
+// 답글을 데이터베이스에서 삭제하는 쿼리
+exports.deleteRecomment = (req, res) => {
+  const recomment_id = req.params.recomment_id;
+
+  db.query('DELETE FROM recomment WHERE recomment_id = ?', [recomment_id], (err, result) => {
+    if (err) {
+      console.error('대댓글 삭제 중 에러 발생:', err);
+      return res.status(500).send('서버 에러');
+    }
+    res.redirect(`/noticeboard/${req.params.post_id}`);
+  })
+}

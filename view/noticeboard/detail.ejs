@@ -104,7 +104,9 @@
                                                         <li>
                                                             <p><strong>User <%= recomment.user_id %>:</strong> <%= recomment.rc_description %></p> 
                                                             <p><small><%= new Date(recomment.write_time).toLocaleString() %></small></p>
-                                                            <button type="button">삭제</button>
+                                                            <form action="/noticeboard/recomment/delete/<%= recomment.recomment_id %>/<%= post.post_id %>" method="POST" style="display:inline;">
+                                                                <button type="submit">삭제</button>
+                                                            </form>
                                                             <button type="button">수정</button>
                                                             <button type="button">좋아요</button>
                                                             <button type="button">싫어요</button>
