@@ -57,7 +57,6 @@ const chatRouter = require('./routes/chat');
 const chatlistRouter = require('./routes/chatlist');
 const usersRouter = require('./routes/users');
 
-
 // 라우터 등록
 app.use('/api/find/password', PW_findRouter);
 app.use('/api/find/id', ID_findRouter);
@@ -74,8 +73,7 @@ app.use('/api/chat', chatRouter);
 app.use('/api/chatlist', chatlistRouter);
 app.use('/api/users', usersRouter);
 // 이메일 인증 코드 전송
-router.post('/api/send-verification-code', sendVerificationCode);
-
+router.post('/api/send-verification-code', );
 // 이메일 인증 코드 확인
 router.post('/api/verify-code', verifyCode);
 

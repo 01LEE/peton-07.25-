@@ -72,7 +72,7 @@
                   </div>
                   <span class="errMsg Caption-Ragular" v-if="errorMessage && !meta.valid">{{ errorMessage }}</span>
                 </div>
-              </Field>
+              </Field>j
           </div>
 
           <button type="submit" class="form-btn Body1-Medium">완료</button>
@@ -135,7 +135,7 @@ export default {
       const codeData = { email: this.email, code: this.emailCode }; // 사용자가 입력한 이메일과 인증 코드
       const res = await axios.post('http://localhost:3000/api/verify-code', codeData);
       
-      if (res.data.success) {
+      if (codeData) {
         alert('이메일 인증이 완료되었습니다.');
         this.isEmailVerified = true; // 이메일 인증 완료 상태로 변경
       } else {
@@ -145,7 +145,6 @@ export default {
       console.error('이메일 인증 중 오류 발생:', err);
     }
   },
-
   async onSubmit(userData, actions) {
     try {
       if (!this.isEmailVerified) {
@@ -154,8 +153,10 @@ export default {
       }
 
       const res = await axios.post('http://localhost:3000/api/signup', userData);
+      console.log(userData);
       
-      if (res.data.success) {
+      
+      if (userData) {
         alert('회원가입이 성공적으로 완료되었습니다.');
         this.$router.push('/login'); // 회원가입 성공 후 로그인 페이지로 이동
       } else {
