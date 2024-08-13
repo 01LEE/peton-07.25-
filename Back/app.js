@@ -56,12 +56,12 @@ const jwtRouter = require('./routes/jwt');
 const chatRouter = require('./routes/chat');
 const chatlistRouter = require('./routes/chatlist');
 const usersRouter = require('./routes/users');
-
+// const verifyCodeRouter = require('/routes/verifyCode');
 // 라우터 등록
 app.use('/api/find/password', PW_findRouter);
 app.use('/api/find/id', ID_findRouter);
-app.use('/api', loginRouter);
-app.use('/api', signupRouter);
+app.use('/api/login', loginRouter);
+app.use('/api/signup', signupRouter);
 app.use('/api/user', userRouter);
 app.use('/api/notice', noticeboardRouter);
 app.use('/api/trainer', trainerRouter);
@@ -73,9 +73,9 @@ app.use('/api/chat', chatRouter);
 app.use('/api/chatlist', chatlistRouter);
 app.use('/api/users', usersRouter);
 // 이메일 인증 코드 전송
-router.post('/api/send-verification-code', );
+// router.post('/api/send-verification-code', );
 // 이메일 인증 코드 확인
-router.post('/api/verify-code', verifyCode);
+// router.post('/api/verify-code', verifyCodeRouter);
 
 // Vue.js 라우터와 연결
 app.get('*', (req, res) => {

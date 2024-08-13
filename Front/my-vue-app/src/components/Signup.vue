@@ -51,9 +51,10 @@
             <div class="field email-field">
               <label for="email" class="form-label Body3-SemiBold">이메일</label>
               <div class="email-input-wrap">
-                <input class="form-control Body1-Medium" v-bind="field"
+                <input  id="emailInput" class="form-control Body1-Medium" v-bind="field" v-model="email"
                   :class="{ 'is-invalid': !meta.valid && errorMessage }" placeholder="이메일을 입력해 주세요" autocomplete="off"/>
-                <button type="button" class="email-btn" @click="startTimer" :disabled="isTimerActive">전송</button>
+                <!-- sendVerificationCode 메소드를 호출 -->
+                <button type="button" class="email-btn" @click="sendVerificationCode" :disabled="isTimerActive">전송</button>
               </div>
               <span class="errMsg Caption-Ragular" v-if="errorMessage && !meta.valid">{{ errorMessage }}</span>
             </div>
@@ -68,14 +69,14 @@
                   <div class="email-code-input-wrap">
                     <input class="form-control Body1-Medium" v-bind="field"
                       :class="{ 'is-invalid': !meta.valid && errorMessage }" placeholder="인증코드를 입력해 주세요" autocomplete="off"/>
-                    <button type="button" class="email-btn">확인</button>
+                    <button type="button" class="email-btn" @click ="verifyCode">확인</button>
                   </div>
                   <span class="errMsg Caption-Ragular" v-if="errorMessage && !meta.valid">{{ errorMessage }}</span>
                 </div>
               </Field>j
           </div>
 
-          <button type="submit" class="form-btn Body1-Medium">완료</button>
+          <button type="submit" class="form-btn Body1-Medium" @click="onSubmit">완료</button>
         </div>
     </Form>
   </div>
@@ -117,9 +118,11 @@ export default {
   async sendVerificationCode() {
     try {
       const emailData = { email: this.email }; // 사용자가 입력한 이메일
-      const res = await axios.post('http://localhost:3000/api/send-verification-code', emailData);
+      console.log(emailData);
+      const res = await axios.post('http://localhost:3000/api/signup/send-verification-code', emailData);
       
-      if (res.data.success) {
+      
+      if (emailData) {
         alert('인증 코드가 전송되었습니다.');
         this.isVerificationCodeSent = true; // 인증 코드 입력 필드를 활성화
       } else {
@@ -133,7 +136,7 @@ export default {
   async verifyCode() {
     try {
       const codeData = { email: this.email, code: this.emailCode }; // 사용자가 입력한 이메일과 인증 코드
-      const res = await axios.post('http://localhost:3000/api/verify-code', codeData);
+      const res = await axios.post('http://localhost:3000/api/signup/verify-code', codeData);
       
       if (codeData) {
         alert('이메일 인증이 완료되었습니다.');
@@ -152,12 +155,14 @@ export default {
         return;
       }
 
-      const res = await axios.post('http://localhost:3000/api/signup', userData);
-      console.log(userData);
+      const res = await axios.post('http://localhost:3000/api/signup/createuser', userData);
+      console.log('userDate : ',userData);
+      console.log('actions :',);
+      
       
       
       if (userData) {
-        alert('회원가입이 성공적으로 완료되었습니다.');
+        console.log(userData);
         this.$router.push('/login'); // 회원가입 성공 후 로그인 페이지로 이동
       } else {
         actions.setFieldError('id', '이미 사용중인 아이디 입니다.');

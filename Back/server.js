@@ -7,7 +7,7 @@ const path = require('path'); // 추가: path 모듈 필요
 const server = http.createServer(app);
 const io = socketSetup(server, sessionMiddleware); // sessionMiddleware를 소켓에 통합
 
-console.log("io:", io);  // io가 올바르게 초기화되었는지 확인
+ // io가 올바르게 초기화되었는지 확인
 
 // 사용자 정보 가져오기
 app.get('/getCurrentUser', (req, res) => {
