@@ -1,0 +1,6 @@
+# pack-refs with: peeled fully-peeled sorted 
+6ba462b2bd3b4275ca45ae236946327aa89d963c refs/heads/HW_CODE@
+a936ea48a5eeaabea9359015932f3fca06f7c95a refs/heads/HW_HS_CODE
+28f096701f4df0bda7c3d6fcb47a3099330700c6 refs/heads/HW_code
+ad759db616a8df9d3afe7059b2fc76f18ba436cb refs/heads/JH_CODE
+16b445dbc59f8cadc05717a12dc3552d577282e4 refs/heads/master
