@@ -23,25 +23,24 @@ if (!fs.existsSync(sessionDir)) {
 const sessionMiddleware = session({
   secret: 'keyboard cat',
   resave: false,
-  saveUninitialized: false, // 초기화되지 않은 세션 저장 방지
+  saveUninitialized: false,
   store: new FileStore({
     path: sessionDir,
     retries: 2
   }),
   cookie: {
-    secure: false, // HTTPS 사용 시 true로 설정
-    maxAge: 600000 // 1분간 세션 유지
+    secure: false, 
+    maxAge: 600000 
   }
 });
 
-app.use(sessionMiddleware); // 세션 미들웨어는 다른 미들웨어보다 앞에 있어야 함
+app.use(sessionMiddleware);
 
 // 미들웨어 설정
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Vue.js 빌드된 파일을 정적 파일로 제공
 app.use(express.static(path.join(__dirname, '../Front/my-vue-app/dist')));
 
 app.use((req, res, next) => {
@@ -64,9 +63,7 @@ const jwtRouter = require('./routes/jwt');
 const chatRouter = require('./routes/chat');
 const chatlistRouter = require('./routes/chatlist');
 const usersRouter = require('./routes/users');
-// const verifyCodeRouter = require('/routes/verifyCode');
 
-// 라우터 등록
 app.use('/api/find/password', PW_findRouter);
 app.use('/api/find/id', ID_findRouter);
 app.use('/api/login', loginRouter);
@@ -87,7 +84,6 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../Front/my-vue-app/dist', 'index.html'));
 });
 
-// 서버 시작
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}/`);

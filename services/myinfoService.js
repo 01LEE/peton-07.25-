@@ -18,36 +18,45 @@ function checkSessionFiles() {
 exports.getMyInfo = (req, res) => {
   const query = `
     SELECT 
-      user.user_id, user.login_id, user.nick_name, user.password, user.create_time, user.update_time, user.user_intro, user.pw_update_time, user.pw_find, user.email, user.profile_image_url
-      FROM user
-      WHERE user.login_id = ?`;
+      user.user_id, user.login_id, user.nick_name, user.create_time, user.update_time, user.user_intro, user.pw_update_time, user.email, user.profile_image_url
+    FROM user
+    WHERE user.login_id = ?`;
+    
+  console.log("세션에서 가져온 로그인 ID:", req.session.login_id);
+
   db.query(query, [req.session.login_id], (err, results) => {
     if (err) {
       console.error("내 정보 조회 중 에러 발생: ", err);
-      res.status(500).send('서버 에러');
+      res.status(500).json({ success: false, message: '서버 에러' });
       return;
     }
 
-    const userInfo = results.length > 0 ? results[0] : {};
-    res.render('myinfo', { myInfos:[userInfo]});
+    if (results.length > 0) {
+      const userInfo = results[0];
+      console.log('유저 정보:', userInfo);
+      res.status(200).json({ success: true, userInfo });
+    } else {
+      res.status(404).json({ success: false, message: '사용자 정보를 찾을 수 없습니다.' });
+    }
   });
 };
 
 exports.updateMyInfo = (req, res) => {
-  const { user_id, nick_name, user_intro } = req.body;
+  const user_id = req.session.userid;
+  const { nick_name, user_intro } = req.body;
 
   const userQuery = 'UPDATE user SET nick_name = ?, user_intro = ?, update_time = NOW() WHERE user_id = ?';
-
-
   db.query(userQuery, [nick_name, user_intro, user_id], (err, result) => {
     if (err) {
-      console.error("내 정보 수정 중 에러 발생: ", err);
-      return res.status(500).send('서버 에러');
+      console.error("유저 정보 업데이트 중 에러 발생: ", err);
+      res.status(500).json({ success: false, message: '서버 에러' });
+      return;
     }
-          res.send('<script>alert("정보 수정 성공!"); window.location.href = "/myinfo";</script>');
-        });
-      }
-      
+    console.log('유저 정보 업데이트 성공:', result);
+    res.status(200).json({ success: true, message: '유저 정보 업데이트 성공' });
+  });
+};
+
    
 
 exports.renderaddpet = (req, res) => {
