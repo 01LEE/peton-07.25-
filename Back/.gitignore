@@ -4,3 +4,4 @@ my-gcs-app/
 nodemailer_test/
 node_modules
 peton-429909-72f4cd54bf9a.json
+.env

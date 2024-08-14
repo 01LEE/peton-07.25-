@@ -1,10 +1,11 @@
 const mysql = require('mysql');
+require('dotenv').config(); // dotenv 패키지를 로드합니다.
 
 const db = mysql.createConnection({
   host: 'localhost',
   user: 'root',
   port: '3306',
-  password: 'gg696923!!',
+  password: process.env.DB_PASSWORD, // 환경 변수에서 비밀번호를 가져옵니다.
   database: 'peton'
 });
 
