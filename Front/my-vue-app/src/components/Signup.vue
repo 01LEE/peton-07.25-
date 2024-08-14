@@ -51,9 +51,8 @@
             <div class="field email-field">
               <label for="email" class="form-label Body3-SemiBold">이메일</label>
               <div class="email-input-wrap">
-                <input  id="emailInput" class="form-control Body1-Medium" v-bind="field" v-model="email"
+                <input id="emailInput" class="form-control Body1-Medium" v-bind="field" v-model="email"
                   :class="{ 'is-invalid': !meta.valid && errorMessage }" placeholder="이메일을 입력해 주세요" autocomplete="off"/>
-                <!-- sendVerificationCode 메소드를 호출 -->
                 <button type="button" class="email-btn" @click="sendVerificationCode" :disabled="isTimerActive">전송</button>
               </div>
               <span class="errMsg Caption-Ragular" v-if="errorMessage && !meta.valid">{{ errorMessage }}</span>
@@ -61,23 +60,24 @@
           </Field>
 
           <div v-if="isTimerActive" class="timer">
-            {{ minutes }}:{{ seconds < 10 ? '0' + seconds : seconds }} </div>
-
-              <Field name="emailCode" type="text" v-slot="{ field, errorMessage, meta }">
-                <div class="field email-code-field">
-                  <label for="emailCode" class="form-label Body3-SemiBold">이메일 인증코드</label>
-                  <div class="email-code-input-wrap">
-                    <input class="form-control Body1-Medium" v-bind="field"
-                      :class="{ 'is-invalid': !meta.valid && errorMessage }" placeholder="인증코드를 입력해 주세요" autocomplete="off"/>
-                    <button type="button" class="email-btn" @click ="verifyCode">확인</button>
-                  </div>
-                  <span class="errMsg Caption-Ragular" v-if="errorMessage && !meta.valid">{{ errorMessage }}</span>
-                </div>
-              </Field>j
+            {{ minutes }}:{{ seconds < 10 ? '0' + seconds : seconds }}
           </div>
 
-          <button type="submit" class="form-btn Body1-Medium" @click="onSubmit">완료</button>
+          <Field name="emailCode" type="text" v-slot="{ field, errorMessage, meta }">
+            <div class="field email-code-field">
+              <label for="emailCode" class="form-label Body3-SemiBold">이메일 인증코드</label>
+              <div class="email-code-input-wrap">
+                <input class="form-control Body1-Medium" v-bind="field" v-model="emailCode"
+                  :class="{ 'is-invalid': !meta.valid && errorMessage }" placeholder="인증코드를 입력해 주세요" autocomplete="off"/>
+                <button type="button" class="email-btn" @click="verifyCode">확인</button>
+              </div>
+              <span class="errMsg Caption-Ragular" v-if="errorMessage && !meta.valid">{{ errorMessage }}</span>
+            </div>
+          </Field>
+
+          <button type="submit" class="form-btn Body1-Medium">완료</button>
         </div>
+      </div>
     </Form>
   </div>
 </template>
@@ -96,9 +96,13 @@ export default {
     return {
       showPassword: false,
       isTimerActive: false,
+      isVerificationCodeSent: false,
+      isEmailVerified: false,
       timer: null,
       minutes: 5,
       seconds: 0,
+      email: '',
+      emailCode: ''
     };
   },
   computed: {
@@ -115,64 +119,94 @@ export default {
     }
   },
   methods: {
-  async sendVerificationCode() {
-    try {
-      const emailData = { email: this.email }; // 사용자가 입력한 이메일
-      console.log(emailData);
-      const res = await axios.post('http://localhost:3000/api/signup/send-verification-code', emailData);
-      
-      
-      if (emailData) {
-        alert('인증 코드가 전송되었습니다.');
-        this.isVerificationCodeSent = true; // 인증 코드 입력 필드를 활성화
-      } else {
-        alert('인증 코드 전송에 실패했습니다.');
+    async sendVerificationCode() {
+      try {
+        const emailData = { email: this.email }; // 사용자가 입력한 이메일
+        console.log(emailData);
+        const res = await axios.post('http://localhost:3000/api/signup/send-verification-code', emailData, { withCredentials: true });
+        
+        if (res.data.message) {
+          alert('인증 코드가 전송되었습니다.');
+          this.isVerificationCodeSent = true; // 인증 코드 입력 필드를 활성화
+          this.startTimer();
+        } else {
+          alert('인증 코드 전송에 실패했습니다.');
+        }
+      } catch (err) {
+        console.error('인증 코드 전송 중 오류 발생:', err);
       }
-    } catch (err) {
-      console.error('인증 코드 전송 중 오류 발생:', err);
+    },
+
+    async verifyCode() {
+      try {
+        const codeData = { email: this.email, code: this.emailCode }; // 사용자가 입력한 이메일과 인증 코드
+        console.log('전송할 codeData 값 : ', codeData);
+
+        const res = await axios.post('http://localhost:3000/api/signup/verify-code', codeData, { withCredentials: true });
+        
+        console.log('서버 응답: ', res.data);
+
+        if (res.data.message === '이메일 인증이 완료되었습니다.') {
+          alert('이메일 인증이 완료되었습니다.');
+          this.isEmailVerified = true; // 이메일 인증 완료 상태로 변경
+        } else {
+          alert('이메일 인증에 실패했습니다.');
+        }
+      } catch (err) {
+        console.error('이메일 인증 중 오류 발생:', err.response ? err.response.data : err.message);
+        alert('이메일 인증 중 오류가 발생했습니다.');
+      }
+    },
+
+    async onSubmit(userData, actions) {
+      try {
+        if (!this.isEmailVerified) {
+          actions.setFieldError('email', '이메일 인증을 완료해 주세요.');
+          return;
+        }
+
+        const res = await axios.post('http://localhost:3000/api/signup/createuser', userData, { withCredentials: true });
+        console.log('userData : ', userData);
+        console.log(res.data.success);
+        
+        if (res.data.success) { // 서버에서 성공을 나타내는 응답을 기대
+          console.log('회원가입 데이터: ', userData);
+          this.$router.push('/login'); // 회원가입 성공 후 로그인 페이지로 이동
+        } else {
+          console.log('ㅅㅄㅄㅂ',res.data.message);
+          
+          actions.setFieldError('id', res.data.message || '이미 사용 중인 아이디입니다.');
+        }
+      } catch (err) {
+        console.error('회원가입 중 오류 발생:', err.response ? err.response.data : err.message);
+        actions.setFieldError('id', err.response?.data?.message || '회원가입 중 오류가 발생했습니다.');
+      }
+    },
+
+    togglePasswordVisibility() {
+      this.showPassword = !this.showPassword;
+    },
+
+    startTimer() {
+      this.isTimerActive = true;
+      this.minutes = 5;
+      this.seconds = 0;
+
+      this.timer = setInterval(() => {
+        if (this.seconds === 0) {
+          if (this.minutes > 0) {
+            this.minutes--;
+            this.seconds = 59;
+          } else {
+            this.isTimerActive = false;
+            clearInterval(this.timer);
+          }
+        } else {
+          this.seconds--;
+        }
+      }, 1000);
     }
   },
-
-  async verifyCode() {
-    try {
-      const codeData = { email: this.email, code: this.emailCode }; // 사용자가 입력한 이메일과 인증 코드
-      const res = await axios.post('http://localhost:3000/api/signup/verify-code', codeData);
-      
-      if (codeData) {
-        alert('이메일 인증이 완료되었습니다.');
-        this.isEmailVerified = true; // 이메일 인증 완료 상태로 변경
-      } else {
-        alert('이메일 인증에 실패했습니다.');
-      }
-    } catch (err) {
-      console.error('이메일 인증 중 오류 발생:', err);
-    }
-  },
-  async onSubmit(userData, actions) {
-    try {
-      if (!this.isEmailVerified) {
-        actions.setFieldError('email', '이메일 인증을 완료해 주세요.');
-        return;
-      }
-
-      const res = await axios.post('http://localhost:3000/api/signup/createuser', userData);
-      console.log('userDate : ',userData);
-      console.log('actions :',);
-      
-      
-      
-      if (userData) {
-        console.log(userData);
-        this.$router.push('/login'); // 회원가입 성공 후 로그인 페이지로 이동
-      } else {
-        actions.setFieldError('id', '이미 사용중인 아이디 입니다.');
-      }
-    } catch (err) {
-      console.error('회원가입 중 오류 발생:', err);
-      actions.setFieldError('id', '회원가입 중 오류가 발생했습니다.');
-    }
-  }
-},
   beforeUnmount() {
     clearInterval(this.timer);
   }
@@ -180,7 +214,7 @@ export default {
 </script>
 
 <style>
-input::placeholder{
+input::placeholder {
   color: var(--text-light-assistive);
 }
 .form-title {
@@ -201,7 +235,6 @@ input::placeholder{
 }
 
 .toggle-btn {
-  /* margin-right: 20px; */
   background: none;
   cursor: pointer;
 }
@@ -224,7 +257,6 @@ input::placeholder{
   background-color: var(--primary-normal);
   cursor: pointer;
 }
-
 
 .timer {
   text-align: center;

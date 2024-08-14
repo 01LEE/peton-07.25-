@@ -1,9 +1,9 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const FileStore = require('session-file-store')(session);
-const cookieParser = require('cookie-parser');
 const cors = require('cors');
 
 const app = express();
@@ -23,23 +23,31 @@ if (!fs.existsSync(sessionDir)) {
 const sessionMiddleware = session({
   secret: 'keyboard cat',
   resave: false,
-  saveUninitialized: true,
+  saveUninitialized: false, // 초기화되지 않은 세션 저장 방지
   store: new FileStore({
     path: sessionDir,
     retries: 2
-  })
+  }),
+  cookie: {
+    secure: false, // HTTPS 사용 시 true로 설정
+    maxAge: 600000 // 1분간 세션 유지
+  }
 });
 
-app.use(sessionMiddleware);
+app.use(sessionMiddleware); // 세션 미들웨어는 다른 미들웨어보다 앞에 있어야 함
 
 // 미들웨어 설정
-app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Vue.js 빌드된 파일을 정적 파일로 제공
 app.use(express.static(path.join(__dirname, '../Front/my-vue-app/dist')));
+
+app.use((req, res, next) => {
+  console.log("현재 세션 데이터: ", req.session);
+  next();
+});
 
 // 라우터 설정
 const loginRouter = require('./routes/login');
@@ -57,6 +65,7 @@ const chatRouter = require('./routes/chat');
 const chatlistRouter = require('./routes/chatlist');
 const usersRouter = require('./routes/users');
 // const verifyCodeRouter = require('/routes/verifyCode');
+
 // 라우터 등록
 app.use('/api/find/password', PW_findRouter);
 app.use('/api/find/id', ID_findRouter);
@@ -72,10 +81,6 @@ app.use('/api/jwt', jwtRouter);
 app.use('/api/chat', chatRouter);
 app.use('/api/chatlist', chatlistRouter);
 app.use('/api/users', usersRouter);
-// 이메일 인증 코드 전송
-// router.post('/api/send-verification-code', );
-// 이메일 인증 코드 확인
-// router.post('/api/verify-code', verifyCodeRouter);
 
 // Vue.js 라우터와 연결
 app.get('*', (req, res) => {
