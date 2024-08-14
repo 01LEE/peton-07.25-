@@ -80,41 +80,46 @@ export default {
         },
     },
     methods: {
-        togglePasswordVisibility() {
-            this.showPassword = !this.showPassword;
-        },
-        async onSubmit(userData, actions) {
-        try {
-            const loginData = {
-                login_id: userData.login_id,
-                password: userData.password,
-                rememberMe: this.rememberMe
-            };
+  async onSubmit(userData, actions) {
+    try {
+      const loginData = {
+        login_id: userData.login_id,
+        password: userData.password,
+        rememberMe: this.rememberMe,
+      };
 
-            const res = await axios.post('http://localhost:3000/api/login', loginData, { withCredentials: true }); // 서버 URL에 맞게 수정하세요.
-            
-            
-            
-            if (res.data.success) {
-                alert('로그인 성공');
-                console.log(res);
-                this.$router.push('/'); // 예시로 대시보드로 이동
+      const res = await axios.post('http://localhost:3000/api/login', loginData, { withCredentials: true });
 
-                localStorage.setItem('authToken', res.data.token);
-                
-            } else {
-                console.log(res);
-                this.loginErr = true;
-                actions.setFieldError('login_id', '로그인에 실패하였습니다.');
-            }
-        } catch (err) {
-            console.error('로그인 중 오류 발생:', err);
-            this.loginErr = true;
-            
-            actions.setFieldError('login_id', '로그인 중 오류가 발생했습니다.');
-        }
+      if (res.data.success) {
+        console.log('로그인 성공:', res.data);
+
+        // 서버로부터 받은 토큰을 localStorage에 저장
+        localStorage.setItem('authToken', res.data.token);
+        console.log('ㅅㅄㅄㅂ',localStorage.setItem);
+        
+
+
+        // 인증된 사용자로서의 상태 설정
+        this.$emit('loginSuccess', res.data.token);
+        console.log('씹씨발',this.$emit);
+        
+       
+        this.$router.push('/');
+        window.location.reload(); // 페이지를 새로고침하여 상태 업데이트
+        this.$router.push('/'); 
+
+      } else {
+        console.log('로그인 실패:', res.data.message);
+        this.loginErr = true;
+        actions.setFieldError('login_id', '로그인에 실패하였습니다.');
+      }
+    } catch (err) {
+      console.error('로그인 중 오류 발생:', err);
+      this.loginErr = true;
+      actions.setFieldError('login_id', '로그인 중 오류가 발생했습니다.');
     }
-    }
+  },
+},
 }
 </script>
 

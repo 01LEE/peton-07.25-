@@ -6,6 +6,6 @@ const loginauthService = require('../services/loginauthService');
 router.post('/', loginauthService.login);
 
 // 로그아웃 라우트
-router.get('/logout', loginauthService.logout);
+router.post('/logout', loginauthService.logout);
 
 module.exports = router;

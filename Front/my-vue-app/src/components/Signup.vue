@@ -1,6 +1,6 @@
 <template>
   <div class="form-wrap">
-    <Form @submit="onSubmit" :validation-schema="schema">
+    <Form id="temp" @submit="onSubmit" :validation-schema="schema" method="post">
       <div class="form-container">
         <div class="form-title">
           <h2 class="Heading1-SemiBold">회원가입</h2>
