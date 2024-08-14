@@ -105,8 +105,6 @@ export default {
         
        
         this.$router.push('/');
-        window.location.reload(); // 페이지를 새로고침하여 상태 업데이트
-        this.$router.push('/'); 
 
       } else {
         console.log('로그인 실패:', res.data.message);
