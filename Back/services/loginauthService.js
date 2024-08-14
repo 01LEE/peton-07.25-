@@ -63,6 +63,7 @@ exports.login = (req, res) => {
             }
 
             res.status(200).json({ success: true, message: '로그인 성공' });
+            console.log("로그인 성공");
         } catch (error) {
             console.error("비밀번호 비교 중 에러 발생: ", error);
             res.status(500).json({ success: false, message: '서버 에러' });
@@ -72,11 +73,11 @@ exports.login = (req, res) => {
 
 exports.logout = (req, res) => {
     const userId = req.session.userid;
+    
     req.session.destroy((err) => {
         if (err) {
             console.error("로그아웃 중 에러 발생: ", err);
-            res.status(500).send('서버 에러');
-            return;
+            return res.status(500).send('서버 에러');
         }
 
         const sessionQuery = 'UPDATE sessions SET logout_time = NOW(), is_active = FALSE WHERE user_id = ? AND is_active = TRUE';
@@ -87,7 +88,8 @@ exports.logout = (req, res) => {
         });
 
         res.clearCookie('connect.sid', { path: '/' });
-        checkSessionFiles();
-        res.redirect('/');
+
+        console.log('로그아웃 성공 ㅉㅉㅉ');
+        res.status(200).json({ message: 'Logout successful' });
     });
 };

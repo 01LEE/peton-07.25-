@@ -69,7 +69,8 @@ const usersRouter = require('./routes/users');
 // 라우터 등록
 app.use('/api/find/password', PW_findRouter);
 app.use('/api/find/id', ID_findRouter);
-app.use('/api/login', loginRouter);
+app.use('/api', loginRouter);
+app.use('/api', loginRouter);
 app.use('/api/signup', signupRouter);
 app.use('/api/user', userRouter);
 app.use('/api/notice', noticeboardRouter);
