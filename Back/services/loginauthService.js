@@ -46,13 +46,26 @@ exports.login = (req, res) => {
 
             req.session.userid = user.user_id;
             req.session.login_id = login_id;
-
-            const sessionQuery = 'INSERT INTO sessions (user_id) VALUES (?)';
-            db.query(sessionQuery, [user.user_id], (err, result) => {
+            
+            // 활성 세션 존재 여부 확인
+            const checkSessionQuery = 'SELECT * FROM sessions WHERE user_id = ? AND is_active = TRUE';
+            db.query(checkSessionQuery, [user.user_id], (err, sessionResults) => {
                 if (err) {
-                    console.error('세션 저장 중 에러 발생: ', err);
+                    console.error('세션 확인 중 에러 발생: ', err);
                     res.status(500).json({ success: false, message: '서버 에러' });
                     return;
+                }
+
+                if (sessionResults.length === 0) {
+                    // 활성 세션이 없으면 새 세션 생성
+                    const sessionQuery = 'INSERT INTO sessions (user_id) VALUES (?)';
+                    db.query(sessionQuery, [user.user_id], (err, result) => {
+                        if (err) {
+                            console.error('세션 저장 중 에러 발생: ', err);
+                            res.status(500).json({ success: false, message: '서버 에러' });
+                            return;
+                        }
+                    });
                 }
             });
 
@@ -63,7 +76,7 @@ exports.login = (req, res) => {
             }
 
             res.status(200).json({ success: true, message: '로그인 성공' });
-            console.log("로그인 성공");
+            console.log("로그인 성공 ㅊㅊ");
         } catch (error) {
             console.error("비밀번호 비교 중 에러 발생: ", error);
             res.status(500).json({ success: false, message: '서버 에러' });
@@ -89,7 +102,7 @@ exports.logout = (req, res) => {
 
         res.clearCookie('connect.sid', { path: '/' });
 
-        console.log('로그아웃 성공 ㅉㅉㅉ');
+        console.log('로그아웃 성공 ㅊㅊ');
         res.status(200).json({ message: 'Logout successful' });
     });
 };
