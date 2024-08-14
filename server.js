@@ -3,6 +3,7 @@ const { app, sessionMiddleware, sessionDir } = require('./app'); // app.js에서
 const socketSetup = require('./socket');
 const fs = require('fs');
 const path = require('path'); // 추가: path 모듈 필요
+const db = require('./db');
 
 const server = http.createServer(app);
 const io = socketSetup(server, sessionMiddleware); // sessionMiddleware를 소켓에 통합
@@ -39,10 +40,21 @@ const shutdown = () => {
       }));
     }
   });
+  // 데이터베이스에서 sessions 테이블을 비웁니다.
+  db.query('DELETE FROM sessions', (err, result) => {
+    if (err) {
+      console.error('Error clearing sessions table:', err);
+    } else {
+      console.log('Sessions table cleared');
+    }
+  });
 
-  console.log('서버 종료');
+  console.log('세션 디렉토리 파일 및 데이터베이스 세션 삭제 완료');
   process.exit(0);
 };
+
+
+
 
 // 서버 종료 시그널을 처리
 process.on('SIGTERM', shutdown);

@@ -62,8 +62,7 @@ exports.login = (req, res) => {
                 res.clearCookie('rememberMe');
             }
 
-            // 로그인 성공 시 응답
-            res.status(200).json({ success: true, message: '로그인 성공', token: 'generated-auth-token' });
+            res.status(200).json({ success: true, message: '로그인 성공' });
         } catch (error) {
             console.error("비밀번호 비교 중 에러 발생: ", error);
             return res.status(500).json({ success: false, message: '서버 에러' });
@@ -74,6 +73,7 @@ exports.login = (req, res) => {
 // 로그아웃 처리 함수
 exports.logout = (req, res) => {
     const userId = req.session.userid;
+    
     req.session.destroy((err) => {
         if (err) {
             console.error("로그아웃 중 에러 발생: ", err);
@@ -91,8 +91,6 @@ exports.logout = (req, res) => {
         // 세션 쿠키 제거
         res.clearCookie('connect.sid', { path: '/' });
         checkSessionFiles();
-        
-        // 로그아웃 성공 응답
-        res.status(200).json({ success: true, message: '로그아웃 성공' });
+        res.redirect('/');
     });
 };
