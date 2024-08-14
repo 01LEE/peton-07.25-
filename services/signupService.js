@@ -51,24 +51,17 @@ exports.sendVerificationCode = (req, res) => {
 
 exports.verifyCode = (req, res) => {
     const { email, code } = req.body;
-  
+
     if (req.session.emailVerificationCode === code) {
-      req.session.EmailCheck = true;
-      req.session.email = email;
-  
-      req.session.save((err) => {
-        if (err) {
-          console.error("세션 저장 중 오류 발생:", err);
-          return res.status(500).json({ message: '서버 오류가 발생했습니다.' });
-        }
-  
+        req.session.EmailCheck = true; // 이메일 인증 완료 플래그 설정
+        req.session.email = email; // 이메일도 다시 저장 (필요 시)
         console.log("이메일 인증 완료. 세션에 저장된 EmailCheck:", req.session.EmailCheck);
+        console.log("세션에 저장된 email:", req.session.email);
+        
         res.json({ message: '이메일 인증이 완료되었습니다.' });
-      });
     } else {
-      console.log("인증 코드가 잘못되었습니다.");
-      res.status(400).json({ message: '인증 코드가 잘못되었습니다.' });
+        console.log("인증 코드가 잘못되었습니다.");
+        res.status(400).json({ message: '인증 코드가 잘못되었습니다.' });
     }
-  };
-  
+};
 
