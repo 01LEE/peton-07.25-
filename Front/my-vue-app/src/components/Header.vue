@@ -19,11 +19,11 @@
       </div>
       <div class="rt">
         <div>
-          <div class="login"><router-link to="/login" class="loginBtn Body1-Medium">{{ login }}</router-link></div>
+          <div class="login"><router-link to="/login" class="loginBtn Body1-Medium">로그인</router-link></div>
           <div class="signup"><router-link to="/signup" class="signupBtn Body1-Medium">회원가입</router-link></div>
     
         
-          <div class="logout"><button @click="login" class="loginBtn Body1-Medium">{{ login }}</button></div>
+          <div class="logout"><button @click="login" class="loginBtn Body1-Medium">로그아웃</button></div>
           <div class="myPage"><router-link to="/Mypage" class="signupBtn Body1-Medium">마이페이지</router-link></div>
         </div>
       </div>
