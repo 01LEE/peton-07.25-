@@ -12,17 +12,19 @@
           <li class="Heading2-SemiBold" :class="{ 'activeLi': isEncyclopediaPath }">
             <router-link :class="{ 'active': isEncyclopediaPath }" to="/Encyclopedia">펫 백과</router-link>
           </li>
+          <li class="Heading2-SemiBold" :class="{ 'activeLi': isChatlistPath }">
+            <router-link :class="{ 'active': isChatlistPath }" to="/chatlist">채팅방</router-link>
+          </li>
         </ul>
       </div>
       <div class="rt">
-        <!-- 로그인 상태에 따라 다른 메뉴를 표시 -->
-        <div v-if="isLoggedIn">
-          <router-link to="/mypage" class="mypageBtn Body1-Medium">마이페이지</router-link>
-          <button @click="logout" class="loginBtn Body1-Medium">로그아웃</button>
-        </div>
-        <div v-else>
-          <router-link to="/login" class="loginBtn Body1-Medium">로그인</router-link>
-          <router-link to="/signup" class="signupBtn Body1-Medium">회원가입</router-link>
+        <div>
+          <div class="login"><router-link to="/login" class="loginBtn Body1-Medium">{{ login }}</router-link></div>
+          <div class="signup"><router-link to="/signup" class="signupBtn Body1-Medium">회원가입</router-link></div>
+    
+        
+          <div class="logout"><button @click="login" class="loginBtn Body1-Medium">{{ login }}</button></div>
+          <div class="myPage"><router-link to="/Mypage" class="signupBtn Body1-Medium">마이페이지</router-link></div>
         </div>
       </div>
     </div>
@@ -30,6 +32,8 @@
 </template>
 
 <script>
+import axios from 'axios';
+
 import axios from 'axios';
 
 export default {
@@ -41,53 +45,18 @@ export default {
     };
   },
   methods: {
-    async login() {
-      try {
-        console.log('로그인 시도 중...');
-        const response = await axios.post('http://localhost:3000/api/login', {
-          email: this.email,
-          password: this.password
-        });
-
-        const token = response.data.token;
-        console.log('서버에서 받은 토큰:', token);
-
-        localStorage.setItem('authToken', token);
-        console.log('토큰이 localStorage에 저장되었습니다.');
-
-        this.authToken = token;
-        this.isLoggedIn = true; // 로그인 상태로 설정
-        // if( this.isLoggedIn = true){
-        //   this.$router.push('/');  // 메인 페이지로 이동
-        // }
-       // 페이지를 새로고침하여 상태 업데이트
-      //  window.location.reload();
-        this.$router.push('/');  // 메인 페이지로 이동
-        this.$router.go(0);
-
-      } catch (error) {
-        console.error('로그인 중 오류 발생:', error.response ? error.response.data : error.message);
-      }
-    },
+    
     checkLoginStatus() {
       const token = localStorage.getItem('authToken');
       console.log("Retrieved authToken from localStorage:", token);
 
       this.isLoggedIn = !!token; // 토큰이 존재하면 true, 없으면 false
       console.log("Is Logged In:", this.isLoggedIn);
-      
-
-    //   for (let i = 0; i < 1; i++) {
-    //   if (this.isLoggedIn) {
-    //     window.location.reload();
-    //     break; // 리로드 후 반복문 종료
-    //   }
-    // }
     },
     async logout() {
       try {
         console.log("로그아웃 시도 중...");
-        await axios.post('http://localhost:3000/api/login/logout');
+        await axios.post('http://localhost:3000/api/logout');
         
         localStorage.removeItem('authToken');
         this.authToken = null;
@@ -120,6 +89,8 @@ header {
   line-height: 70px;
   box-sizing: border-box;
   border-bottom: 1px solid var(--border-light-default);
+  display: flex;
+  align-items: center; /* 자식 요소들을 수직으로 중앙에 배치 */
 }
 
 .h-inner {
@@ -127,6 +98,7 @@ header {
   margin: 0 auto;
   display: flex;
   justify-content: space-between;
+  align-items: center; /* 자식 요소들을 수직으로 중앙에 배치 */
 }
 
 .logo {
@@ -147,11 +119,12 @@ header {
 
 .nav>li {
   display: flex;
-  line-height: 70px;
+  align-items: center; /* 내비게이션 항목을 수직으로 중앙에 배치 */
   position: relative;
 }
 .nav>li>a{
   padding: 0px 10px;
+  line-height: 70px; /* 항목들을 헤더 높이에 맞추어 수직으로 중앙에 배치 */
 }
 .active {
   color: var(--primary-normal);
@@ -170,11 +143,13 @@ header {
 
 .lf {
   display: flex;
+  align-items: center; /* 로고를 수직으로 중앙에 배치 */
   gap: 70px;
 }
 
-.rt {
+.rt > div {
   display: flex;
+  align-items: center; /* 로그인 및 회원가입 버튼을 수직으로 중앙에 배치 */
   gap: 10px;
 }
 
