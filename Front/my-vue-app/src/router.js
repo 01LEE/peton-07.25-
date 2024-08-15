@@ -6,7 +6,8 @@ import Signup from './components/Signup.vue'
 import CommAll from './components/CommunityComponents/CommAll.vue';
 import AboptAll from './components/AdoptionComponents/AdoptAll.vue'
 import GatheringAll from './components/GatheringComponents/CommGathering.vue';
-import Chatlist from "./components/Chatlist.vue";
+// import Chatlist from "./components/Chatlist.vue";
+import ChatRoom from "./components/ChatRoom.vue"
 // post
 import PostCreate from '/src/components/Posts/PostCreate.vue';
 import PostDetail from '/src/components/Posts/PostDetail.vue';
@@ -81,10 +82,16 @@ const routes = [
     path: "/404",
     component: ErrorPage,
   },
+  // {
+  //   path: "/chatlist",
+  //   name: "Chatlist",
+  //   component: Chatlist
+  // },
   {
-    path: "/chatlist",
-    name: "Chatlist",
-    component: Chatlist
+    path: '/chat/:id',
+    name: 'ChatRoom',
+    component: ChatRoom,
+    props: true // URL 파라미터를 컴포넌트에 전달
   }
 ];
 

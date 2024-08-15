@@ -11,6 +11,7 @@ const io = socketSetup(server, sessionMiddleware); // sessionMiddleware를 소�
  // io가 올바르게 초기화되었는지 확인
 
 // 사용자 정보 가져오기
+/*  라우터 users로 이동
 app.get('/getCurrentUser', (req, res) => {
   // 세션에서 현재 사용자 정보 가져오기
   if (req.session && req.session.userid && req.session.login_id) {
@@ -24,7 +25,7 @@ app.get('/getCurrentUser', (req, res) => {
     res.status(401).json({ error: 'User not authenticated' });
   }
 });
-
+*/
 
 // 서버 종료 이벤트 처리
 const shutdown = () => {

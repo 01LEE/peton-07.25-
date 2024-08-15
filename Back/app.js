@@ -66,6 +66,8 @@ const chatlistRouter = require('./routes/chatlist');
 const usersRouter = require('./routes/users');
 // const verifyCodeRouter = require('/routes/verifyCode');
 
+const chatbuttonRouter = require('./routes/chatbutton');  // 새로운 API 라우터
+
 // 라우터 등록
 app.use('/api/find/password', PW_findRouter);
 app.use('/api/find/id', ID_findRouter);
@@ -79,9 +81,11 @@ app.use('/api/myinfo', myinfoRouter);
 app.use('/api/dogencyclopedia', dogencyclopediaRouter);
 app.use('/api/profile', profileRouter);
 app.use('/api/jwt', jwtRouter);
-app.use('/api/chat', chatRouter);
-app.use('/api/chatlist', chatlistRouter);
-app.use('/api/users', usersRouter);
+app.use('/api', chatRouter);
+app.use('/api', chatlistRouter);
+app.use('/api', usersRouter);
+
+app.use('/api', chatbuttonRouter);
 
 // Vue.js 라우터와 연결
 app.get('*', (req, res) => {

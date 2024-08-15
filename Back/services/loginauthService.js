@@ -46,6 +46,9 @@ exports.login = (req, res) => {
 
             req.session.userid = user.user_id;
             req.session.login_id = login_id;
+            // 여기에 콘솔 로그 추가
+                console.log('세션에 저장된 userId:', req.session.userid);
+                console.log('세션에 저장된 loginId:', req.session.login_id);
             
             // 활성 세션 존재 여부 확인
             const checkSessionQuery = 'SELECT * FROM sessions WHERE user_id = ? AND is_active = TRUE';

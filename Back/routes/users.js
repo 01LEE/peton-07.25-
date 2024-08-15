@@ -9,17 +9,6 @@ const db = require('../db');
 const isAuthenticated = require('../middlewares/isAuthenticated');
 const activeUsersService = require('../services/activeUsersService');
 
-
-
-// 여기서 console.log를 사용하여 모듈들이 올바르게 로드되었는지 확인합니다.
-/*
-console.log("isAuthenticated:", typeof isAuthenticated); // "function"이 나와야 합니다.
-console.log("activeUsersService:", typeof activeUsersService); // "object"가 나와야 합니다.
-console.log("getActiveUsers:", typeof activeUsersService.getActiveUsers); // "function"이 나와야 합니다.
-// console.log("io:", typeof io); // io 객체가 올바르게 가져왔는지 확인
-*/
-
-
 // 활성 사용자 목록을 반환하는 엔드포인트
 router.get('/active-users', isAuthenticated, (req, res) => {
   activeUsersService.getActiveUsers((err, users) => {
@@ -54,6 +43,29 @@ router.get('/users', isAuthenticated, (req, res) => {
   });
 });
 
+router.get('/current-user-id', isAuthenticated, (req, res) => {
+  if (req.session.userid) {
+    res.json({ userId: req.session.userid });
+  } else {
+    res.status(401).json({ error: 'User not authenticated' });
+  }
+});
+
+// 사용자 정보 가져오기
+router.get('/getCurrentUser', (req, res) => {
+  // 세션에서 현재 사용자 정보 가져오기
+  if (req.session && req.session.userid && req.session.login_id) {
+    res.json({ 
+      user_id: req.session.userid, 
+      login_id: req.session.login_id, 
+      sender: req.session.login_id, 
+      receiver: 'all' 
+    });
+  } else {
+    res.status(401).json({ error: 'User not authenticated' });
+  }
+});
+
 // 채팅방 생성 또는 기존 채팅방으로 이동
 router.post('/createOrFindChatRoom', isAuthenticated, (req, res) => {
 
@@ -81,6 +93,7 @@ router.post('/createOrFindChatRoom', isAuthenticated, (req, res) => {
     }
     if (results.length > 0) {
       // 기존 채팅방이 있는 경우
+      console.log('기존 채팅방으로 이동:', results[0].id);
       return res.json({ chatRoomId: results[0].id });
     } else {
       // 새로운 채팅방 생성
@@ -98,7 +111,8 @@ router.post('/createOrFindChatRoom', isAuthenticated, (req, res) => {
             console.error('Database query error:', err);
             return res.status(500).json({ message: 'Database error' });
           }
-          io.emit('refreshChatList', { userId, targetUserId }); // Socket.IO 이벤트 발생
+          console.log('새 채팅방 생성 및 이동:', chatRoomId1);
+          // io.emit('refreshChatList', { userId, targetUserId }); // Socket.IO 이벤트 발생
           return res.json({ chatRoomId: chatRoomId1 });
         });
       });
