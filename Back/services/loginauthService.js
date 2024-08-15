@@ -75,7 +75,7 @@ exports.login = (req, res) => {
                 res.clearCookie('rememberMe');
             }
 
-            res.status(200).json({ success: true, message: '로그인 성공' });
+            res.status(200).json({ success: true, message: '로그인 성공', token: 'generated-auth-token' });
             console.log("로그인 성공 ㅊㅊ");
         } catch (error) {
             console.error("비밀번호 비교 중 에러 발생: ", error);

@@ -6,7 +6,7 @@ import Signup from './components/Signup.vue'
 import CommAll from './components/CommunityComponents/CommAll.vue';
 import AboptAll from './components/AdoptionComponents/AdoptAll.vue'
 import GatheringAll from './components/GatheringComponents/CommGathering.vue';
-import Chatlist from "./Pages/Chatlist.vue";
+import Chatlist from "./components/Chatlist.vue";
 // post
 import PostCreate from '/src/components/Posts/PostCreate.vue';
 import PostDetail from '/src/components/Posts/PostDetail.vue';

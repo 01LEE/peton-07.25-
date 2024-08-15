@@ -19,7 +19,7 @@
                             <label for="password" class="form-label Body3-SemiBold">비밀번호</label>
                             <div class="password-wrap form-control"
                                 :class="{ 'is-invalid': meta && meta.valid === false && errorMessage }">
-                                <input :type="showPassword ? 'text' : 'password'" class="pw-input Body1-Medium"
+                                <input id="password" :type="showPassword ? 'text' : 'password'" class="pw-input Body1-Medium"
                                     v-bind="field" placeholder="비밀번호를 입력해주세요" autocomplete="off"/>
                                 <button type="button" class="toggle-btn" @click="togglePasswordVisibility">
                                     <img class="icon-img"
@@ -54,6 +54,7 @@
 </template>
 
 <script>
+import emitter from '@/eventBus'; // 추가
 import axios from 'axios';
 import { Form, Field } from 'vee-validate';
 import { object, string } from 'yup';
@@ -91,16 +92,21 @@ export default {
                 rememberMe: this.rememberMe
             };
 
-            const res = await axios.post('http://localhost:3000/api/login', loginData, { withCredentials: true }); // 서버 URL에 맞게 수정하세요.
+            const res = await axios.post('http://localhost:3000/api/login', loginData, { withCredentials: true });
             
             
             
             if (res.data.success) {
-                alert('로그인 성공');
+                alert('로그인 성공!!');
                 console.log(res);
-                this.$router.push('/'); // 예시로 대시보드로 이동
 
+                console.log("Received token:", res.data.token);
                 localStorage.setItem('authToken', res.data.token);
+                console.log("Stored authToken:", localStorage.getItem('authToken'));
+                // 'userLoggedIn' 이벤트 발생
+                emitter.emit('userLoggedIn');
+
+                this.$router.push('/'); // 홈 화면으로 이동
                 
             } else {
                 console.log(res);

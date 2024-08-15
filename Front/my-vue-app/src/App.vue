@@ -1,19 +1,21 @@
 <template>
   <Header></Header>
   <router-view style="padding-top: 70px"></router-view>
+  <ChatButton />
   <Footer></Footer>
 </template>
 
 <script>
 import Header from './components/Header.vue';
 import Footer from './components/Footer.vue';
-
+import ChatButton from './components/ChatButton.vue';
 
 export default {
   name: 'App',
   components: {
     Header,
     Footer,
+    ChatButton
   }
 }
 </script>
