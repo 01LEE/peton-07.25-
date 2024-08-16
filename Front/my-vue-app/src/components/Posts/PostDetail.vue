@@ -1,5 +1,5 @@
 <template>
-  <div class="PostDetail-wrap">
+  <div class="PostDetail-wrap" v-if="postData">
     <div class="PostDetail-container">
       <div class="post-category">
         <span class="Caption-SemiBold">{{ postData.category }}</span>
@@ -25,7 +25,6 @@
             </li>
             <li>
               <img src="@/assets/images/icon/Icon/Normal/Like.svg" alt="좋아요">
-              <!-- <p class="Body2-Medium">{{ postData.likes }}</p> -->
               <p class="Body2-Medium">{{ postData.likes }}</p>
             </li>
             <li>
@@ -62,29 +61,52 @@
       <button class="Btn" @click="goListPage">목록으로 돌아가기</button>
     </div>
   </div>
+  <div v-else>
+    <p>Loading...</p>
+  </div>
 </template>
+
 <script>
-import postData from '@/assets/Data/PostsData';
+import axios from 'axios';
 
 export default {
   name: 'PostDetail',
   data() {
     return {
-      postData: this.getPostData(),
-      likeCount: 0,
+      postData: null,  // 초기 상태는 null로 설정
       isLikeActive: false,
     };
   },
   methods: {
-    getPostData() {
+    fetchPostData() {
       const postId = this.$route.params.id;
-      return postData.find(post => post.id === parseInt(postId));
+
+      axios.get(`http://localhost:3000/api/notice/${postId}`)
+        .then(response => {
+          const post = response.data;
+          this.postData = {
+            id: post.post_id,
+            category: '자유게시판',  // 카테고리는 하드코딩
+            title: post.title,
+            content: post.description,
+            author: {
+              name: post.nick_name,
+              avatar: '@/assets/images/cat01.png',  // 기본 아바타 이미지
+              time: new Date(post.write_time).toLocaleString(),
+            },
+            views: post.view_count,
+            likes: post.likeCount,
+            comments: post.totalCommentsCount  // 기본값
+          };
+        })
+        .catch(error => {
+          console.error('Error fetching post details:', error);
+        });
     },
     goListPage() {
       this.$router.push({ name: 'PostList' });
     },
     toggleLike() {
-      // this.likeCount > 0 ? this.likeCount-- : this.likeCount++;
       if (this.isLikeActive) {
         this.postData.likes--;
       } else {
@@ -92,6 +114,9 @@ export default {
       }
       this.isLikeActive = !this.isLikeActive;
     }
+  },
+  created() {
+    this.fetchPostData();
   }
 }
 </script>

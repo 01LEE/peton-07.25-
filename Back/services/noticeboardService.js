@@ -48,14 +48,14 @@ exports.getNoticeboard = (req, res) => {
   db.query(query, [pageSize, offset], (err, results) => {
     if (err) {
       console.error("게시판 조회 중 에러 발생: ", err);
-      return res.status(500).send('서버 에러');
+      return res.status(500).json({ error: '서버 에러' });
     }
 
     // 총 게시물 수를 가져옵니다.
     db.query(countQuery, (err, countResults) => {
       if (err) {
         console.error("총 게시물 수 조회 중 에러 발생: ", err);
-        return res.status(500).send('서버 에러');
+        return res.status(500).json({ error: '서버 에러' });
       }
 
       const totalItems = countResults[0].total;
@@ -66,13 +66,8 @@ exports.getNoticeboard = (req, res) => {
         post.totalCommentsCount = post.commentCount + post.recommentCount;
       });
 
-      // 결과를 렌더링합니다.
-      res.render('noticeboard/list', {
-        noticeboard: results,
-        currentPage: page,
-        totalPages: totalPages,
-        order: order
-      });
+      // 결과를 JSON 형식으로 응답합니다.
+      res.json(results, page, totalPages, order);
     });
   });
 };
@@ -132,17 +127,17 @@ exports.getPostDetail = (req, res) => {
   db.query(incrementViewCountQuery, [post_id], (err) => {
     if (err) {
       console.error("게시물 조회 수 증가 중 에러 발생: ", err);
-      return res.status(500).send('서버 에러');
+      return res.status(500).json({ error: '서버 에러' });
     }
 
     // 게시물 상세 정보를 가져옵니다.
     db.query(postQuery, [post_id], (err, postResults) => {
       if (err) {
         console.error("게시물 조회 중 에러 발생: ", err);
-        return res.status(500).send('서버 에러');
+        return res.status(500).json({ error: '서버 에러' });
       }
       if (postResults.length === 0) {
-        return res.status(404).send('게시물이 존재하지 않습니다.');
+        return res.status(404).json({ error: '게시물이 존재하지 않습니다.' });
       }
       const post = postResults[0];
 
@@ -150,7 +145,7 @@ exports.getPostDetail = (req, res) => {
       db.query(commentQuery, [post_id], (err, commentResults) => {
         if (err) {
           console.error("댓글 조회 중 에러 발생: ", err);
-          return res.status(500).send('서버 에러');
+          return res.status(500).json({ error: '서버 에러' });
         }
 
         // 댓글과 추가 댓글을 포함한 결과를 저장할 배열
@@ -160,13 +155,13 @@ exports.getPostDetail = (req, res) => {
         // 각 댓글에 대해 추가 댓글을 가져오는 함수
         const fetchRecomments = (index) => {
           if (index >= commentResults.length) {
-            // 모든 댓글과 추가 댓글을 가져온 후 렌더링
-            return res.render('noticeboard/detail', { 
-              post, 
-              likeCount: post.likeCount, 
-              comments: commentsWithRecomments,
-              totalCommentsCount 
-            });
+            // 모든 댓글과 추가 댓글을 가져온 후 JSON 응답
+            return res.json(
+              post,
+              post.likeCount,
+              commentsWithRecomments,
+              totalCommentsCount
+            );
           }
 
           const comment = commentResults[index];
@@ -175,7 +170,7 @@ exports.getPostDetail = (req, res) => {
           db.query(recommentQuery, [comment.comment_id], (err, recommentResults) => {
             if (err) {
               console.error("추가 댓글 조회 중 에러 발생: ", err);
-              return res.status(500).send('서버 에러');
+              return res.status(500).json({ error: '서버 에러' });
             }
 
             // 댓글에 추가 댓글을 추가합니다.
