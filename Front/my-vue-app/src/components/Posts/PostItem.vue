@@ -1,42 +1,41 @@
-
 <template>
-    <div class="post-wrapper" @click="goDetailPage">
-      <div class="post-category">
-        <span class="Caption-SemiBold">{{ postData.category }}</span>
-      </div>
-      <div class="post-content-preview">
-        <h2 class="Heading1-SemiBold">{{ postData.title }}</h2>
-        <p class="Body1-long-Medium">{{ postData.content }}</p>
-      </div>
-      <div class="post-info">
-        <div class="user-profile">
-          <div class="user-avatar">
-            <img :src="postData.author.avatar" alt="User Avatar" class="icon-img"/>
-          </div>
-          <div class="user-name">
-            <div class="Body1-Medium title-text">{{ postData.author.name }}</div>
-            <div class="Caption-Ragular info-text">{{ postData.author.time }}</div>
-          </div>
+  <div class="post-wrapper" @click="goDetailPage">
+    <div class="post-category">
+      <span class="Caption-SemiBold">{{ postData.category }}</span>
+    </div>
+    <div class="post-content-preview">
+      <h2 class="Heading1-SemiBold">{{ postData.title }}</h2>
+      <p class="Body1-long-Medium">{{ postData.content }}</p>
+    </div>
+    <div class="post-info">
+      <div class="user-profile">
+        <div class="user-avatar">
+          <img :src="postData.author.avatar" alt="User Avatar" class="icon-img"/>
         </div>
-        <div class="post-stats">
-          <ul>
-            <li>
-              <img src="@/assets/images/icon/Icon/Normal/Eye.svg" alt="조회수">
-              <p class="Body2-Medium">{{ postData.views }}</p>
-            </li>
-            <li>
-              <img src="@/assets/images/icon/Icon/Normal/Like.svg" alt="좋아요">
-              <p class="Body2-Medium">{{ postData.likes }}</p>
-            </li>
-            <li>
-              <img src="@/assets/images/icon/Icon/Normal/Message.svg" alt="댓글">
-              <p class="Body2-Medium">{{ postData.comments }}</p>
-            </li>
-          </ul>
+        <div class="user-name">
+          <div class="Body1-Medium title-text">{{ postData.author.name }}</div>
+          <div class="Caption-Ragular info-text">{{ postData.author.time }}</div>
         </div>
+      </div>
+      <div class="post-stats">
+        <ul>
+          <li>
+            <img src="@/assets/images/icon/Icon/Normal/Eye.svg" alt="조회수">
+            <p class="Body2-Medium">{{ postData.views }}</p>
+          </li>
+          <li>
+            <img src="@/assets/images/icon/Icon/Normal/Like.svg" alt="좋아요">
+            <p class="Body2-Medium">{{ postData.likes }}</p>
+          </li>
+          <li>
+            <img src="@/assets/images/icon/Icon/Normal/Message.svg" alt="댓글">
+            <p class="Body2-Medium">{{ postData.comments }}</p>
+          </li>
+        </ul>
       </div>
     </div>
-  </template>
+  </div>
+</template>
 
 <script>
 export default {
@@ -50,7 +49,7 @@ export default {
   methods: {
     goDetailPage() {
       this.$emit('post-click', this.postData.id);
-      this.postData.views++;
+      this.postData.views++;  // 조회수 증가 (이건 로컬에서만 반영됨)
     }
   }
 }

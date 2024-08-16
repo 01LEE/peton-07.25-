@@ -6,8 +6,9 @@ const noticeboardService = require('../services/noticeboardService');
 
 const { not } = require('ip');
 
+
 // GET 요청: 게시판 목록을 렌더링
-router.get('/noticeboard', noticeboardService.getNoticeboard);
+router.get('/', noticeboardService.getNoticeboard);
 
 // GET 요청: 게시글 작성 폼을 렌더링
 router.get('/noticeboard/form',isAuthenticated, (req, res) => {
@@ -18,7 +19,7 @@ router.get('/noticeboard/form',isAuthenticated, (req, res) => {
 router.post('/form', isAuthenticated, noticeboardService.createPost); 
 
 // GET 요청: 게시물 상세 페이지를 렌더링
-router.get('/noticeboard/:post_id', noticeboardService.getPostDetail);
+router.get('/:post_id', noticeboardService.getPostDetail);
 
 // POST 요청: 게시물 삭제를 데이터 베이스에 저장
 router.post('/noticeboard/delete/:post_id', isAuthenticated, noticeboardService.deletePost);
