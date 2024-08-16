@@ -1,0 +1,97 @@
+:root {
+    /* Blue Colors */
+    --blue-100: #E1E9FF;
+    --blue-200: #C3D3FF;
+    --blue-300: #A6B9FE;
+    --blue-400: #8A9BFE;
+    --blue-500: #6A92FE;
+    --blue-600: #4969FE;
+    --blue-700: #405898;
+    --blue-800: #2A3466;
+    --blue-900: #151D33;
+
+    /* Red Colors */
+    --red-100: #FFFAFA;
+    --red-200: #FEECEC;
+    --red-300: #FFB5B5;
+    --red-400: #FF8CBC;
+    --red-500: #FF6363;
+    --red-600: #FF4242;
+    --red-700: #E52222;
+    --red-800: #BD0C0C;
+    --red-900: #750404;
+
+    /* Neutral Colors */
+    --neutral-0: #000000;
+    --neutral-5: #0F0F10;
+    --neutral-7: #141415;
+    --neutral-10: #1E1719;
+    --neutral-15: #1B1C1E;
+    --neutral-17: #212225;
+    --neutral-20: #292A2D;
+    --neutral-22: #2E2F;
+    --neutral-23: #333438;
+    --neutral-25: #37383C;
+    --neutral-30: #46474C;
+    --neutral-40: #5A5C63;
+    --neutral-50: #70737C;
+    --neutral-60: #878A93;
+    --neutral-70: #989BA2;
+    --neutral-80: #AEB0B6;
+    --neutral-90: #C2C4C8;
+    --neutral-95: #DBDCEF;
+    --neutral-96: #E1E2E4;
+    --neutral-97: #EAEBDC;
+    --neutral-98: #F4F4F5;
+    --neutral-99: #F7F7F8;
+    --neutral-100: #FFFFFF;
+
+    /* Shadow */
+    --shadow-normal: 0px 1px 2px 0px rgba(0, 0, 0, 0.12), 0px 0px 1px 0px rgba(0, 0, 0, 0.08), 0px 0px 1px 0px rgba(0, 0, 0, 0.08);;
+    --shadow-emphasize: 0px 2px 8px 0px rgba(46, 93, 214, 0.12), 0px 1px 4px 0px rgba(46, 93, 214, 0.08), 0px 0px 1px 0px rgba(46, 93, 214, 0.08);    
+    --shadow-strong: 0px 6px 12px 0px rgba(0, 0, 0, 0.12), 0px 4px 8px 0px rgba(0, 0, 0, 0.08), 0px 0px 4px 0px rgba(0, 0, 0, 0.08);;
+    --shadow-heavy: 0px 16px 20px 0px rgba(0, 0, 0, 0.12), 0px 8px 16px 0px rgba(0, 0, 0, 0.08), 0px 0px 8px 0px rgba(0, 0, 0, 0.08);;
+
+    /* Primary - Light Mode, Dark Mode 동일 */
+    --primary-normal: var(--blue-500);
+    --primary-hover: var(--blue-400);
+    --primary-active: var(--blue-600);
+    
+    /* Text, Icon - Light Mode */
+    --text-light-default: var(--neutral-10);
+    --text-light-strong: var(--neutral-0);
+    --text-light-sub: var(--neutral-30);
+    --text-light-info: var(--neutral-60);
+    --text-light-assistive: var(--neutral-90);
+    --text-light-disable: var(--neutral-96);
+    --text-light-reverse: var(--neutral-100);
+
+    /* Background - Light Mode */
+    --background-light-default: var(--neutral-100);
+    --background-light-alternative: var(--neutral-98);
+    --background-light-code: var(--neutral-10);
+    --background-light-strong: var(--neutral-95);
+    --background-light-hover: var(--neutral-96);
+
+    /* Background/Dimmer - Light Mode */
+    --background-dimmer-light-default-1: rgba(247, 247, 248, 0.5);
+    --background-dimmer-light-default-2: rgba(231, 231, 232, 0.5);
+
+    /* Border - Light Mode */
+    --border-light-default: var(--neutral-96);
+    --border-light-sub: var(--neutral-97);
+    --border-light-alternative: var(--neutral-98);
+    --border-light-strong: var(--neutral80);
+
+    /* Danger - Light, Dark 동일 */
+    --danger-text: var(--red-600);
+    --danger-base: var(--red-500);
+    --danger-border: var(--red-200);
+    --danger-surface: var(--red-100);
+
+    /* Information - Light, Dark 동일 */
+    --info-text: var(--blue-400);
+    --info-base: var(--blue-500);
+    --info-border: var(--blue-200);
+    --info-surface: var(--blue-100);
+}
