@@ -44,10 +44,13 @@ app.use(cookieParser());
 // Vue.js 빌드된 파일을 정적 파일로 제공
 app.use(express.static(path.join(__dirname, '../Front/my-vue-app/dist')));
 
+// 세션 데이터 실시간 확인
+/*
 app.use((req, res, next) => {
   console.log("현재 세션 데이터: ", req.session);
   next();
 });
+*/
 
 // 라우터 설정
 const loginRouter = require('./routes/login');
