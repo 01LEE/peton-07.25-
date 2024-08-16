@@ -94,8 +94,6 @@ export default {
 
             const res = await axios.post('http://localhost:3000/api/login', loginData, { withCredentials: true });
             
-            
-            
             if (res.data.success) {
                 alert('로그인 성공!!');
                 console.log(res);

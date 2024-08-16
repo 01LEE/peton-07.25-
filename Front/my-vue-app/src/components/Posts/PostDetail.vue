@@ -10,11 +10,11 @@
       <div class="post-info">
         <div class="user-profile">
           <div class="user-avatar">
-            <img :src="postData.author.avatar" alt="User Avatar" class="icon-img" />
+            <img :src="getAvatarUrl(postData.author.avatar)" alt="User Avatar" class="icon-img" />
           </div>
           <div class="user-name">
             <div class="Body1-Medium title-text">{{ postData.author.name }}</div>
-            <div class="Caption-Ragular info-text">{{ postData.author.time }}</div>
+            <div class="Caption-Ragular info-text">{{ timeAgo(postData.author.time) }}</div>
           </div>
         </div>
         <div class="post-stats">
@@ -92,7 +92,7 @@ export default {
             author: {
               name: post.nick_name,
               avatar: '@/assets/images/cat01.png',  // 기본 아바타 이미지
-              time: new Date(post.write_time).toLocaleString(),
+              time: post.write_time,  // 시간 데이터 그대로 저장
             },
             views: post.view_count,
             likes: post.likeCount,
@@ -113,6 +113,28 @@ export default {
         this.postData.likes++;
       }
       this.isLikeActive = !this.isLikeActive;
+    },
+    timeAgo(date) {
+      const now = new Date();
+      const diff = now - new Date(date);
+      const seconds = Math.floor(diff / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+      const days = Math.floor(hours / 24);
+
+      if (days > 0) {
+        return days + '일 전';
+      } else if (hours > 0) {
+        return hours + '시간 전';
+      } else if (minutes > 0) {
+        return minutes + '분 전';
+      } else {
+        return seconds + '초 전';
+      }
+    },
+    getAvatarUrl(avatarPath) {
+      // 이 함수는 이미지 경로를 제대로 해석하여 반환합니다
+      return require(`@/assets/images/cat01.png`);
     }
   },
   created() {

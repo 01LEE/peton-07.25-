@@ -3,38 +3,41 @@
         <div class="PostTitle">
             <h2 class="Title2-Bold title-text">글 작성</h2>
         </div>
-        <div class="PostCategory-wrap">
-            <h3 class="title-text Heading1-SemiBold">게시판</h3>
-            <CustomSelect :options="options"></CustomSelect>
-        </div>
-        <div class="PostTitle-wrap">
-            <h3 class="title-text Heading1-SemiBold">제목</h3>
-            <input type="text" name="PostTitle" id="PostTitle" placeholder="제목을 입력해 주세요" autocomplete="off"
-                class="Body1-Medium">
-        </div>
-        <div class="PostContent-wrap">
-            <h3 class="title-text Heading1-SemiBold">내용</h3>
-            <textarea id="PostContent" cols="30" rows="10"
-                placeholder="특정인 또는 특정 기업명을 포함한 비방글 작성 시 명예훼손 등 법적인 처벌을 받을 수 있으며 모든 법적 책임은 작성자에게 있습니다. 바이러스 및 개인정보(주민등록번호, 여권 번호, 운전면허번호 등)가 포함된 이미지는 사전 안내 없이 삭제 또는 수정될 수 있습니다."
-                class="Body1-Medium"></textarea>
-        </div>
-        <div class="PostImage-wrap">
-            <h3 class="title-text Heading1-SemiBold">이미지</h3>
-            <div class="PostImage">
-                <label for="UploadFile" class="image-upload-label"><img src="@/assets/images/icon/plus.svg"
-                        alt="플러스"></label>
-                <input type="file" id="UploadFile">
-                <span class="UploadInfo Body1-Medium"><img src="@/assets/images/icon/Circle Exclamation.svg" alt="알림">이미지는 최대 5개, 400KB 이하의 GIF, JPEG, JPG 파일만 등록이 가능합니다.</span>
+        <form action="">
+            <div class="PostCategory-wrap">
+                <h3 class="title-text Heading1-SemiBold">게시판</h3>
+                <CustomSelect :options="options"></CustomSelect>
             </div>
-        </div>
-        <div class="PostFormBtn">
-            <button @click="goPage" class="Btn Cancel Body1-Medium">취소</button>
-            <button @click="goPage" class="Btn Body1-Medium" type="submit">등록</button>
-        </div>
+            <div class="PostTitle-wrap">
+                <h3 class="title-text Heading1-SemiBold">제목</h3>
+                <input type="text" name="PostTitle" id="PostTitle" placeholder="제목을 입력해 주세요" autocomplete="off"
+                class="Body1-Medium" v-model="postTitle">
+            </div>
+            <div class="PostContent-wrap">
+                <h3 class="title-text Heading1-SemiBold">내용</h3>
+                <textarea id="PostContent" cols="30" rows="10"
+                placeholder="특정인 또는 특정 기업명을 포함한 비방글 작성 시 명예훼손 등 법적인 처벌을 받을 수 있으며 모든 법적 책임은 작성자에게 있습니다. 바이러스 및 개인정보(주민등록번호, 여권 번호, 운전면허번호 등)가 포함된 이미지는 사전 안내 없이 삭제 또는 수정될 수 있습니다."
+                class="Body1-Medium" v-model="postContent"></textarea>
+            </div>
+            <div class="PostImage-wrap">
+                <h3 class="title-text Heading1-SemiBold">이미지</h3>
+                <div class="PostImage">
+                    <label for="UploadFile" class="image-upload-label"><img src="@/assets/images/icon/plus.svg"
+                            alt="플러스"></label>
+                    <input type="file" id="UploadFile">
+                    <span class="UploadInfo Body1-Medium"><img src="@/assets/images/icon/Circle Exclamation.svg" alt="알림">이미지는 최대 5개, 400KB 이하의 GIF, JPEG, JPG 파일만 등록이 가능합니다.</span>
+                </div>
+            </div>
+            <div class="PostFormBtn">
+                <button @click="goPage" class="Btn Cancel Body1-Medium">취소</button>
+                <button @click="onSubmit" class="Btn Body1-Medium" type="button">등록</button>
+            </div>
+        </form>
     </div>
 </template>
 
 <script>
+import axios from 'axios';
 import CustomSelect from '../CustomSelect.vue';
 export default {
     name: 'PostsCreate',
@@ -45,8 +48,29 @@ export default {
     },
     methods: {
         goPage() {
-            this.$router.push('All');
+            this.$router.push({ name: 'PostList' });
+        },
+        async onSubmit() {
+            console.log('onSubmit 메소드 호출됨');
+        try {
+            console.log('전송할 데이터:', { title: this.postTitle, description: this.postContent });
+            
+            const response = await axios.post('http://localhost:3000/api/notice/form', {
+                title: this.postTitle,
+                description: this.postContent
+            });
+            
+            if (response.data.success) {
+                alert('게시글이 성공적으로 등록되었습니다.');
+                this.$router.push({ name: 'PostList' });
+            } else {
+                alert('게시글 등록에 실패하였습니다.');
+            }
+        } catch (error) {
+            console.error('게시글 등록 중 오류 발생:', error);
+            alert('게시글 등록 중 오류가 발생했습니다.');
         }
+    }
     },
     components: {
         CustomSelect,

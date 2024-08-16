@@ -19,6 +19,7 @@ if (!fs.existsSync(sessionDir)) {
   fs.mkdirSync(sessionDir);
 }
 
+
 // 세션 미들웨어 설정
 const sessionMiddleware = session({
   secret: 'keyboard cat',

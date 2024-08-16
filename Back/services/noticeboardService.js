@@ -2,6 +2,21 @@ const exp = require('constants');
 const db = require('../db');
 const isYoursNoticeboard = require('../middlewares/isYoursNoticeboard');
 const noticeboardService = require('../services/noticeboardService');
+// const session = require('express-session');
+// const fs = require('fs');
+
+// const path = require('path');
+// const sessionDir = path.join(__dirname, '..', 'sessions');
+
+// function checkSessionFiles() {
+//     fs.readdir(sessionDir, (err, files) => {
+//         if (err) {
+//             console.error('세션 디렉토리 읽기 중 에러 발생: ', err);
+//         } else {
+//             console.log('현재 세션 파일 목록: ', files);
+//         }
+//     });
+// }
 
 // 게시판 목록을 가져오는 서비스 함수
 exports.getNoticeboard = (req, res) => {
@@ -72,23 +87,35 @@ exports.getNoticeboard = (req, res) => {
   });
 };
 
-// 게시글을 생성하는 서비스 함수
+// 게시물 작성 서비스
 exports.createPost = (req, res) => {
   const { title, description } = req.body;
-  const login_id = req.session.login_id;
-  db.query('INSERT INTO noticeboard (nick_name, title, description, user_id, write_time, update_time) VALUES ((SELECT nick_name from user where login_id =?), ?, ?, (SELECT user_id FROM user WHERE login_id = ?), NOW(), NOW())',
-      [login_id, title, description,  login_id], (err, result) => {
-      if (err) {
-          console.error('게시글 생성 중 에러 발생:', err);
-          return res.status(500).send('서버 에러');
+  const login_id = req.session.login_id; // 로그인된 사용자의 ID를 가져옵니다.
+  console.log(req.body);
+  console.log(login_id);
+  // 데이터베이스에 게시글을 삽입합니다.
+  db.query(
+      'INSERT INTO noticeboard (nick_name, title, description, user_id, write_time, update_time) VALUES ((SELECT nick_name FROM user WHERE login_id = ?), ?, ?, (SELECT user_id FROM user WHERE login_id = ?), NOW(), NOW())',
+      [login_id, title, description, login_id],
+      (err, result) => {
+          if (err) {
+              console.error('게시글 생성 중 에러 발생:', err);
+              return res.status(500).send('서버 에러');
+          }
+          res.json({ success: true });
       }
-      res.redirect('/noticeboard');
-  });
+  );
 };
 
 // 게시물 상세 정보를 가져오는 서비스 함수
 exports.getPostDetail = (req, res) => {
   const post_id = req.params.post_id;
+  const login_id = req.session.login_id;
+  const user_id = req.session.userid;
+
+  console.log("로그인 데이터 (세션):", req.session);
+  console.log("login_id:", login_id);
+  console.log("user_id:", user_id);
 
   // 게시물 조회 수를 증가시키는 쿼리
   const incrementViewCountQuery = 'UPDATE noticeboard SET view_count = view_count + 1 WHERE post_id = ?';
