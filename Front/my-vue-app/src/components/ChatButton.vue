@@ -32,7 +32,7 @@
             <!-- 채팅방 목록 표시 및 삭제 버튼 추가 -->
             <h3>채팅방 목록</h3>
             <ul>
-              <li v-for="chatRoom in chatRooms" :key="chatRoom.id">
+              <li v-for="chatRoom in chatRooms" :key="chatRoom.id" @click="openChatRoom(chatRoom.other_user_id, chatRoom.other_user_name)">
                 {{ chatRoom.other_user_name }}
                 <button @click="deleteChatRoom(chatRoom.id)">삭제</button>
               </li>
@@ -73,6 +73,8 @@ export default {
       chatRooms: [],
       activeTab: 'users', // 'users' 또는 'chatrooms'
       currentRoomId: null,
+      currentUserId: null,
+      messages: [] // 채팅 메시지 저장
     };
   },
   mounted() {
@@ -161,6 +163,7 @@ export default {
             this.currentRoomId = chatRoomId;
             this.showModal = false; // ChatButton 모달 닫기
             this.showChatRoom = true; // ChatRoom 모달 열기
+            this.loadMessages(chatRoomId); // 채팅방의 기존 메시지 로드
           } else {
             console.error('채팅방 생성 또는 조회 중 문제가 발생했습니다.');
           }
@@ -168,6 +171,41 @@ export default {
         .catch(error => {
           console.error('채팅방으로 이동 중 오류 발생:', error);
         });
+    },
+    loadMessages(roomId) {
+      axios.get(`/api/messages?roomId=${roomId}`)
+        .then(response => {
+          this.messages = response.data;
+        })
+        .catch(error => {
+          console.error('메시지를 가져오는 중 오류 발생:', error);
+        });
+    },
+    sendMessage() {
+      if (this.newMessage.trim() === '') return;
+
+      const chatMessage = {
+        roomId: this.currentRoomId,
+        sender: this.currentUserId,
+        receiver: 'all',
+        message: this.newMessage
+      };
+
+      axios.post('/api/sendMessage', chatMessage)
+        .then(() => {
+          this.messages.push(chatMessage); // 메시지를 채팅창에 추가
+          this.newMessage = ''; // 입력 필드 초기화
+          this.scrollChatToBottom(); // 스크롤을 하단으로 이동
+        })
+        .catch(error => {
+          console.error('메시지 전송 중 오류 발생:', error);
+        });
+    },
+    scrollChatToBottom() {
+      this.$nextTick(() => {
+        const chatContent = this.$el.querySelector('.chat-content');
+        chatContent.scrollTop = chatContent.scrollHeight;
+      });
     },
     // 모달 열기
     openModal() {

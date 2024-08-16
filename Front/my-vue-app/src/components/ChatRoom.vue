@@ -10,8 +10,16 @@
       <!-- 채팅 내용 영역 -->
       <div class="chat-content">
         <ul>
-          <li v-for="message in messages" :key="message.id">
-            {{ message.sender }}: {{ message.text }}
+          <li 
+            v-for="message in messages" 
+            :key="message.id" 
+            :class="{'my-message': message.sender === currentUserId, 'other-message': message.sender !== currentUserId}">
+            <div v-if="message.sender !== currentUserId" class="sender-name">
+              {{ message.sender }}
+            </div>
+            <div class="message-text">
+              {{ message.text }}
+            </div>
           </li>
         </ul>
       </div>
@@ -70,6 +78,7 @@ export default {
     fetchMessages() {
       axios.get(`/api/messages?roomId=${this.roomId}`)
         .then(response => {
+          console.log('로드된 메시지:', response.data); // 이전 메시지 로드 시 로그
           this.messages = response.data.map(msg => ({
             id: msg.id,
             sender: msg.sender,
@@ -82,6 +91,7 @@ export default {
     },
     setupSocketListeners() {
       this.socket.on('message', (data) => {
+        console.log('서버로부터 수신한 메시지:', data); // 서버에서 수신한 메시지 로그
         if (data.sender !== this.currentUser) {
           this.addMessageToChat(data, 'receiver');
         }
@@ -93,20 +103,30 @@ export default {
       const chatMessage = {
         roomId: this.roomId,
         sender: this.currentUser,
-        receiver: 'all', // 기본적으로 모두에게 메시지 전송
+        receiver: 'all',
         message: this.newMessage
       };
 
-      this.socket.emit('sendMessage', chatMessage);
+      console.log('전송할 메시지:', chatMessage); // 메시지 전송 전 로그
+
+      axios.post('/api/sendMessage', chatMessage)
+        .then(() => {
+        console.log('메시지 전송 성공'); // 메시지 전송 성공 로그
       this.addMessageToChat(chatMessage, 'sender');
       this.newMessage = '';
+    })
+    .catch(error => {
+      console.error('메시지 전송 중 오류 발생:', error); // 메시지 전송 실패 로그
+    });
     },
-    addMessageToChat(data, type) {
+    addMessageToChat(data) {
       const message = {
         id: Date.now(),
         sender: data.sender,
         text: data.message,
+        isMine: data.sender === this.currentUser  // 메시지 발신자가 본인인지 확인
       };
+      console.log('채팅에 추가할 메시지:', message); // 메시지를 추가할 때 로그
       this.messages.push(message);
       this.scrollChatToBottom();
     },
@@ -177,6 +197,47 @@ export default {
   flex: 1;
   overflow-y: auto;
   margin-bottom: 10px;
+  padding: 10px;
+}
+
+.chat-content ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.chat-content li {
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-content .message {
+  max-width: 70%;
+  padding: 10px;
+  border-radius: 10px;
+  word-wrap: break-word;
+}
+
+.chat-content .sender .message {
+  background-color: var(--primary-dark);
+  color: white;
+  align-self: flex-end;
+  text-align: right;
+}
+
+.chat-content .receiver .message {
+  background-color: #f0f0f0;
+  color: black;
+  align-self: flex-start;
+  text-align: left;
+}
+
+.chat-content .receiver .username {
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #555;
 }
 
 .chat-input {
