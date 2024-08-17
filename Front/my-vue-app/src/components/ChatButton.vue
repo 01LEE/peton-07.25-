@@ -32,7 +32,7 @@
             <!-- 채팅방 목록 표시 및 삭제 버튼 추가 -->
             <h3>채팅방 목록</h3>
             <ul>
-              <li v-for="chatRoom in chatRooms" :key="chatRoom.id" @click="openChatRoom(chatRoom.other_user_id, chatRoom.other_user_name)">
+              <li v-for="chatRoom in chatRooms" :key="chatRoom.id" @click="joinExistingChatRoom(chatRoom.id)">
                 {{ chatRoom.other_user_name }}
                 <button @click="deleteChatRoom(chatRoom.id)">삭제</button>
               </li>
@@ -171,6 +171,13 @@ export default {
         .catch(error => {
           console.error('채팅방으로 이동 중 오류 발생:', error);
         });
+    },
+    joinExistingChatRoom(roomId) {
+      // 채팅방 목록에서 호출: 이미 존재하는 채팅방으로 이동
+      this.currentRoomId = roomId;
+      this.showModal = false; // ChatButton 모달 닫기
+      this.showChatRoom = true; // ChatRoom 모달 열기
+      this.loadMessages(roomId); // 채팅방의 기존 메시지 로드
     },
     loadMessages(roomId) {
       axios.get(`/api/messages?roomId=${roomId}`)
