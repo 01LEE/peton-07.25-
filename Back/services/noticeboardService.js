@@ -2,6 +2,7 @@ const exp = require('constants');
 const db = require('../db');
 const isYoursNoticeboard = require('../middlewares/isYoursNoticeboard');
 const noticeboardService = require('../services/noticeboardService');
+const { profile } = require('console');
 // const session = require('express-session');
 // const fs = require('fs');
 
@@ -95,8 +96,8 @@ exports.createPost = (req, res) => {
   console.log(login_id);
   // 데이터베이스에 게시글을 삽입합니다.
   db.query(
-      'INSERT INTO noticeboard (nick_name, title, description, user_id, write_time, update_time) VALUES ((SELECT nick_name FROM user WHERE login_id = ?), ?, ?, (SELECT user_id FROM user WHERE login_id = ?), NOW(), NOW())',
-      [login_id, title, description, login_id],
+      'INSERT INTO noticeboard (profile_image_url, nick_name, title, description, user_id, write_time, update_time) VALUES ((SELECT profile_image_url FROM peton.user WHERE login_id = ?),(SELECT nick_name FROM user WHERE login_id = ?) ,?, ?, (SELECT user_id FROM user WHERE login_id = ? ),NOW(), NOW())',
+      [login_id, login_id, title, description, login_id],
       (err, result) => {
           if (err) {
               console.error('게시글 생성 중 에러 발생:', err);

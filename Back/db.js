@@ -5,7 +5,7 @@ const db = mysql.createConnection({
   host: 'localhost',
   user: 'root',
   port: '3306',
-  password: process.env.DB_PASSWORD, // 환경 변수에서 비밀번호를 가져옵니다.
+  password: '10qp29wo', // 환경 변수에서 비밀번호를 가져옵니다.
   database: 'peton'
 });
 

@@ -10,7 +10,7 @@
     <div class="post-info">
       <div class="user-profile">
         <div class="user-avatar">
-          <img :src="cat01" alt="User Avatar" class="icon-img"/>
+          <img :src="postData.profile_image_url || 'default-image-url'" alt="User Avatar" class="icon-img"/>
         </div>
         <div class="user-name">
           <div class="Body1-Medium title-text">{{ postData.author.name }}</div>
@@ -38,7 +38,6 @@
 </template>
 
 <script>
-import cat01 from '@/assets/images/cat01.png'; // 이미지를 import하여 변수로 사용
 export default {
   name: 'PostItem',
   props: {
@@ -49,7 +48,7 @@ export default {
   },
   data() {
     return {
-      cat01 // 이미지 경로를 data 속성으로 사용
+      profile_image_url: ''
     };
   },
   methods: {

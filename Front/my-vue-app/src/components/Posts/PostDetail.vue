@@ -10,7 +10,7 @@
       <div class="post-info">
         <div class="user-profile">
           <div class="user-avatar">
-            <img :src="getAvatarUrl(postData.author.avatar)" alt="User Avatar" class="icon-img" />
+            <img :src="postData.profile_image_url || 'default-image-url'" alt="User Avatar" class="icon-img"/>
           </div>
           <div class="user-name">
             <div class="Body1-Medium title-text">{{ postData.author.name }}</div>
@@ -86,6 +86,7 @@ export default {
           const post = response.data;
           this.postData = {
             id: post.post_id,
+            profile_image_url: post.profile_image_url,
             category: '자유게시판',  // 카테고리는 하드코딩
             title: post.title,
             content: post.description,

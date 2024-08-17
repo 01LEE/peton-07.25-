@@ -56,6 +56,7 @@ export default {
             console.log('전송할 데이터:', { title: this.postTitle, description: this.postContent });
             
             const response = await axios.post('http://localhost:3000/api/notice/form', {
+                image: this.profile_image_url,
                 title: this.postTitle,
                 description: this.postContent
             });
