@@ -42,8 +42,8 @@
       </div>
     </div>
     <div class="pet-card-container">
-      <PetCard v-for="pet in pets" :key="pet"></PetCard>
-      <div class="Pet-card-create-wrap" @click="pets++">
+      <PetCard v-for="pet in pets" :key="pet.pet_id" :pet="pet"></PetCard>
+      <div class="Pet-card-create-wrap" @click="addNewPet">
         <div class="Pet-card-create">
           <img src="/img/plus.32aef565.svg" alt="플러스">
           <p>펫 정보 추가하기</p>
@@ -54,7 +54,7 @@
 </template>
 
 <script>
-import PetCard from '@/components/PetCard.vue';
+import PetCard from '../components/PetCard.vue';
 import axios from 'axios';
 
 export default {
@@ -65,11 +65,11 @@ export default {
       user: {
         profile_image_url: '', 
         login_id: '',
-        nick_name: '',
-        user_intro: '', // 빈 문자열로 초기화
+        nick_name: '', 
+        user_intro: '', 
       },
       originalUser: {}, 
-      pets: 0,
+      pets: [],
       isLoading: false,
       isImageChanged: false, 
     };
@@ -91,6 +91,19 @@ export default {
         console.error("사용자 정보 조회 중 오류 발생:", error);
       } finally {
         this.isLoading = false;
+      }
+    },
+    async fetchPets() {
+      try {
+        const response = await axios.get('http://localhost:3000/api/myinfo/mypets');
+        if (response.data.success) {
+          console.log("Fetched pets:", response.data.pets); 
+          this.pets = response.data.pets;
+        } else {
+          console.error("반려동물 정보를 불러오지 못했습니다.");
+        }
+      } catch (error) {
+        console.error("반려동물 정보 조회 중 오류 발생:", error);
       }
     },
     async saveProfileImage() {
@@ -127,7 +140,7 @@ export default {
         const dataToSend = {
           login_id: this.user.login_id,
           nick_name: this.user.nick_name,
-          user_intro: this.user.user_intro || '',  // null일 경우 빈 문자열로 대체
+          user_intro: this.user.user_intro || '',  
         };
 
         console.log("Sending data to server:", JSON.stringify(dataToSend, null, 2));
@@ -173,17 +186,28 @@ export default {
         this.originalUser = { ...this.user }; 
         this.isEditing = true;
       }
+    },
+    addNewPet() {
+      this.pets.push({
+        pet_id: Date.now(), // 임시 ID
+        name: '',
+        gender: null,
+        birthDate: '',
+        breed: '',
+        description: '',
+        img: ''
+      });
     }
   },
   created() {
     this.fetchUserInfo();
+    this.fetchPets();
   },
   components: {
     PetCard,
   }
 }
 </script>
-
 
 <style>
 .mypage-wrap {
