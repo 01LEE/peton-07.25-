@@ -38,7 +38,7 @@ export default {
             author: {
               name: post.nick_name,
               avatar: 'peton-07.25-/Front/my-vue-app/src/assets/images/cat01.png', // 기본 아바타 이미지
-              time: new Date(post.write_time).toLocaleString()
+              time: this.timeAgo(post.write_time)  // 변환된 시간 저장
             },
             views: post.view_count,  // 기본값
             likes: post.likeCount,  // 기본값
@@ -48,6 +48,24 @@ export default {
         .catch(error => {
           console.error("Error fetching posts:", error);
         });
+    },
+    timeAgo(date) {
+      const now = new Date();
+      const diff = now - new Date(date);
+      const seconds = Math.floor(diff / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+      const days = Math.floor(hours / 24);
+
+      if (days > 0) {
+        return days + '일 전';
+      } else if (hours > 0) {
+        return hours + '시간 전';
+      } else if (minutes > 0) {
+        return minutes + '분 전';
+      } else {
+        return seconds + '초 전';
+      }
     }
   },
   created() {

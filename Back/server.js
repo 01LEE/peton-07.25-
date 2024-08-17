@@ -54,9 +54,6 @@ const shutdown = () => {
   process.exit(0);
 };
 
-
-
-
 // 서버 종료 시그널을 처리
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
