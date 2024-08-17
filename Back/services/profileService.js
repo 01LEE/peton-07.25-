@@ -14,7 +14,7 @@ const bucket = storage.bucket(bucketName);
 const multer = Multer({
   storage: Multer.memoryStorage(),
   limits: {
-    fileSize: 5 * 1024 * 1024,
+    fileSize: 5 * 1024 * 1024, // 파일 크기 제한 (5MB)
   },
 });
 
@@ -48,41 +48,28 @@ const uploadProfileImage = async (req, res) => {
   blobStream.end(req.file.buffer);
 };
 
+const updatePetImage = async (req, res) => {
+  const userId = req.session.userid;
+  const petId = req.body.pet_id; // body에서 pet_id를 가져옴
+  const petImageUrl = req.body.pet_image_url; // 이전 미들웨어에서 설정한 이미지 URL
 
-
-const uploadPetImage = async (req, res) => {
-  if (!req.file) {
-    return res.status(400).send('No file uploaded.');
+  if (!petId || !petImageUrl) {
+    return res.status(400).json({ success: false, message: 'Invalid pet_id or pet_image_url.' });
   }
 
-  const userId = req.session.userid;
-  console.log('userID :', userId);
-  const blob = bucket.file(`petImages/${userId}/${Date.now()}_${req.file.originalname}`);
-  const blobStream = blob.createWriteStream();
+  const query = 'UPDATE pet SET pet_image_url = ? WHERE pet_id = ? AND user_id = ?';
 
-  blobStream.on('error', err => {
-    console.error('Error uploading to Cloud Storage:', err);
-    return res.status(500).send('Error uploading to Cloud Storage.');
+  db.query(query, [petImageUrl, petId, userId], (err, result) => {
+    if (err) {
+      console.error('Error updating pet image in the database:', err);
+      return res.status(500).json({ success: false, message: 'Database error.' });
+    }
+    res.json({ success: true, message: 'Pet image updated successfully.', imageUrl: petImageUrl });
   });
-
-  blobStream.on('finish', () => {
-    const publicUrl = `https://storage.googleapis.com/${bucketName}/${blob.name}`;
-    const query = 'INSERT INTO pet (user_id, pet_image_url) VALUES (?, ?) ON DUPLICATE KEY UPDATE pet_image_url = VALUES(pet_image_url)';
-
-    db.query(query, [userId, publicUrl], (err, result) => {
-      if (err) {
-        console.error('Error saving pet image URL to database:', err);
-        return res.status(500).send('Database error.');
-      }
-      res.redirect('/myinfo');
-    });
-  });
-
-  blobStream.end(req.file.buffer);
 };
 
 module.exports = {
   multer,
   uploadProfileImage,
-  uploadPetImage,
+  updatePetImage,
 };
