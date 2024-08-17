@@ -32,7 +32,7 @@ export default {
   data() {
     return {
       // isOpen: false,
-      Options:['작성일 순','조회수 순'],
+      Options:['작성일 순','조회수 순', '인기 순'],
       FilterData: FilterData.communityFilters,
     }
   },

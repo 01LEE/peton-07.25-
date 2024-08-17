@@ -30,7 +30,7 @@ router.get('/noticeboard/edit/:post_id', isAuthenticated, noticeboardService.get
 router.post('/noticeboard/edit/:post_id',isAuthenticated, noticeboardService.editPost);
 
 // POST 요청: 댓글 추가
-router.post('/noticeboard/comment/:post_id', isAuthenticated, noticeboardService.addComment);
+router.post('/comment/:post_id', isAuthenticated, noticeboardService.addComment);
 
 // POST 요청: 댓글 삭제
 router.post('/noticeboard/comment/delete/:comment_id/:post_id', isAuthenticated, noticeboardService.deleteComment);
@@ -48,12 +48,13 @@ router.post('/noticeboard/recomment/delete/:recomment_id/:post_id', isAuthentica
 // router.post('/noticeboard/recomment/edit/:recomment_id/:post_id', isAuthenticated, noticeboardService.editRecomment);
 
 // GET 요청: 좋아요 추가
-router.get('/noticeboard/like/:post_id', (req, res) => {
-    render('/noticeboard/like/:post_id');
-});
+// router.get('/noticeboard/like/:post_id', (req, res) => {
+//     render('/noticeboard/like/:post_id');
+// });
+
+router.post('/like/:post_id', isAuthenticated, noticeboardService.likeUP);
 
 
-router.post('/noticeboard/like/:post_id', isAuthenticated, noticeboardService.likeUP);
 router.get('/noticeboard/post/:post_id/comment/like/:comment_id', (req,res) =>{
     render('/noticeboard/post/:post_id/comment/like/:comment_id');
 }); 
