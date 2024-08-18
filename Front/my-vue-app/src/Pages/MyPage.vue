@@ -42,7 +42,7 @@
       </div>
     </div>
     <div class="pet-card-container">
-      <PetCard v-for="pet in pets" :key="pet.pet_id" :pet="pet"></PetCard>
+      <PetCard v-for="(pet, index) in pets" :key="index" :pet="pet" :is-new="!pet.pet_id"></PetCard>
       <div class="Pet-card-create-wrap" @click="addNewPet">
         <div class="Pet-card-create">
           <img src="/img/plus.32aef565.svg" alt="플러스">
@@ -189,13 +189,12 @@ export default {
     },
     addNewPet() {
       this.pets.push({
-        pet_id: Date.now(), // 임시 ID
-        name: '',
+        pet_name: '',
         gender: null,
-        birthDate: '',
-        breed: '',
-        description: '',
-        img: ''
+        birth_date: '',
+        pet_breed: '',
+        pet_intro: '',
+        pet_image_url: ''
       });
     }
   },
@@ -208,6 +207,123 @@ export default {
   }
 }
 </script>
+
+<style>
+.mypage-wrap {
+  display: flex;
+  width: 1280px;
+  margin: 50px auto 140px;
+  gap: 30px;
+  justify-content: center;
+}
+.user-info-wrap {
+  position: sticky;
+  top: 100px;
+  display: flex;
+  width: 350px;
+  height: 100%;
+  padding: 20px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  box-shadow: var(--shadow-emphasize);
+  border-radius: 10px;
+}
+
+.user-profile-content {
+  width: 100%;
+}
+
+.info-item-text {
+  min-height: 48px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.edit-input {
+  flex: 1;
+  height: 40px;
+  box-sizing: border-box;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+/* user-profile */
+.mypage-user-profile {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+  align-items: center;
+}
+.mypage-user-profile-img-wrap{
+  position: relative;
+}
+.mypage-user-profile-img {
+  display: block;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+button.img-change-btn>img {
+  width: 100%;
+}
+
+.img-change-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  background: none;
+  cursor: pointer;
+  box-shadow: var(--shadow-emphasize);
+}
+
+.item-label {
+  width: 120px;
+}
+
+.value-text {
+  flex: 1;
+  text-align: right;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.save-btn-wrap {
+  display: flex;
+  gap: 10px;
+}
+
+/* 펫정보 추가 */
+.Pet-card-create-wrap {
+  display: flex;
+  width: 800px;
+  height: 478px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  box-shadow: var(--shadow-emphasize);
+  cursor: pointer;
+}
+.Pet-card-create {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+}
+</style>
 
 <style>
 .mypage-wrap {

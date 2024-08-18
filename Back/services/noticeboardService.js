@@ -2,6 +2,7 @@ const exp = require('constants');
 const db = require('../db');
 const isYoursNoticeboard = require('../middlewares/isYoursNoticeboard');
 const noticeboardService = require('../services/noticeboardService');
+const { profile } = require('console');
 // const session = require('express-session');
 // const fs = require('fs');
 
@@ -25,7 +26,7 @@ exports.getNoticeboard = (req, res) => {
   const order = req.query.order || 'latest'; // 기본값으로 'latest'
 
   // 페이지당 항목 수
-  const pageSize = 10;
+  const pageSize = 100000;
   const offset = (page - 1) * pageSize;
 
   // 정렬 쿼리를 결정합니다.
@@ -95,8 +96,8 @@ exports.createPost = (req, res) => {
   console.log(login_id);
   // 데이터베이스에 게시글을 삽입합니다.
   db.query(
-      'INSERT INTO noticeboard (nick_name, title, description, user_id, write_time, update_time) VALUES ((SELECT nick_name FROM user WHERE login_id = ?), ?, ?, (SELECT user_id FROM user WHERE login_id = ?), NOW(), NOW())',
-      [login_id, title, description, login_id],
+      'INSERT INTO noticeboard (profile_image_url, nick_name, title, description, user_id, write_time, update_time) VALUES ((SELECT profile_image_url FROM user WHERE login_id = ?),(SELECT nick_name FROM user WHERE login_id = ?) ,?, ?, (SELECT user_id FROM user WHERE login_id = ? ),NOW(), NOW())',
+      [login_id, login_id, title, description, login_id],
       (err, result) => {
           if (err) {
               console.error('게시글 생성 중 에러 발생:', err);
@@ -323,14 +324,24 @@ exports.addComment = (req, res) => {
   const { c_description } = req.body;
   const user_id = req.session.userid;
 
-  db.query('INSERT INTO comment (post_id, user_id, c_description, write_time, update_time) VALUES (?, ?, ?, NOW(), NOW())',
-    [post_id, user_id, c_description], (err, result) => {
-    if (err) {
-      console.error('댓글 추가 중 에러 발생:', err);
-      return res.status(500).send('서버 에러');
+  // 댓글을 데이터베이스에 추가
+  db.query(
+    'INSERT INTO comment (post_id, user_id, c_description, write_time, update_time) VALUES (?, ?, ?, NOW(), NOW())',
+    [post_id, user_id, c_description],
+    (err, result) => {
+      if (err) {
+        console.error('댓글 추가 중 에러 발생:', err);
+        return res.status(500).json({ success: false, message: '서버 에러가 발생했습니다.' });
+      }
+
+      // 댓글이 성공적으로 추가되었음을 알리는 JSON 응답
+      return res.status(200).json({
+        success: true,
+        message: '댓글이 성공적으로 추가되었습니다.',
+        commentId: result.insertId, // 새로 추가된 댓글의 ID 반환
+      });
     }
-    res.redirect(`/noticeboard/${post_id}`);
-  });
+  );
 };
 
 // 댓글을 수정하는 서비스 함수
@@ -366,6 +377,7 @@ exports.deleteComment = (req, res) => {
   });
 };
 
+// 좋아요 서비스
 exports.likeUP = (req, res) => {
   const userId = req.session.userid;
   const post_id = req.params.post_id;
@@ -376,7 +388,7 @@ exports.likeUP = (req, res) => {
   db.query(checkQuery, [userId, post_id], (err, results) => {
     if (err) {
       console.error('좋아요 확인 중 에러 발생:', err);
-      return res.status(500).send('서버 에러');
+      return res.status(500).json({ message: '서버 에러' });
     }
 
     if (results.length > 0) {
@@ -386,10 +398,10 @@ exports.likeUP = (req, res) => {
       db.query(deleteQuery, [userId, post_id], (err, result) => {
         if (err) {
           console.error('좋아요 삭제 중 에러 발생:', err);
-          return res.status(500).send('서버 에러');
+          return res.status(500).json({ message: '서버 에러' });
         }
 
-        return res.redirect(`/noticeboard/${post_id}`);
+        return res.json({ message: '좋아요 취소됨', liked: false });
       });
     } else {
       // 좋아요가 없는 경우 추가 쿼리 실행
@@ -398,14 +410,15 @@ exports.likeUP = (req, res) => {
       db.query(insertQuery, [userId, post_id], (err, result) => {
         if (err) {
           console.error('좋아요 추가 중 에러 발생:', err);
-          return res.status(500).send('서버 에러');
+          return res.status(500).json({ message: '서버 에러' });
         }
 
-        return res.redirect(`/noticeboard/${post_id}`);
+        return res.json({ message: '좋아요 추가됨', liked: true });
       });
     }
   });
 };
+
 
 exports.commentlikeUp = (req, res) => {
   const userId = req.session.userid;

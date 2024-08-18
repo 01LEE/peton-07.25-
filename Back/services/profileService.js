@@ -1,8 +1,8 @@
 const { Storage } = require('@google-cloud/storage');
 const path = require('path');
-const Multer = require('multer');
 const db = require('../db');
 
+// Google Cloud Storage 설정
 const storage = new Storage({
   keyFilename: path.join(__dirname, '../peton-429909-72f4cd54bf9a.json'),
   projectId: 'peton-429909',
@@ -11,13 +11,7 @@ const storage = new Storage({
 const bucketName = 'peton_bucket';
 const bucket = storage.bucket(bucketName);
 
-const multer = Multer({
-  storage: Multer.memoryStorage(),
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 파일 크기 제한 (5MB)
-  },
-});
-
+// 프로필 이미지 업로드 함수
 const uploadProfileImage = async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ success: false, message: 'No file uploaded.' });
@@ -48,14 +42,17 @@ const uploadProfileImage = async (req, res) => {
   blobStream.end(req.file.buffer);
 };
 
+// 펫 이미지 업데이트 함수
 const updatePetImage = async (req, res) => {
   const userId = req.session.userid;
-  const petId = req.body.pet_id; // body에서 pet_id를 가져옴
-  const petImageUrl = req.body.pet_image_url; // 이전 미들웨어에서 설정한 이미지 URL
+  const petId = req.body.pet_id;
+  console.log('Uploaded file:', req.file);
 
-  if (!petId || !petImageUrl) {
-    return res.status(400).json({ success: false, message: 'Invalid pet_id or pet_image_url.' });
+  if (!petId || !req.file) {
+    return res.status(400).json({ success: false, message: 'Invalid pet_id or missing image file.' });
   }
+
+  const petImageUrl = req.body.pet_image_url; // 업로드된 이미지의 public URL
 
   const query = 'UPDATE pet SET pet_image_url = ? WHERE pet_id = ? AND user_id = ?';
 
@@ -69,7 +66,6 @@ const updatePetImage = async (req, res) => {
 };
 
 module.exports = {
-  multer,
   uploadProfileImage,
   updatePetImage,
 };

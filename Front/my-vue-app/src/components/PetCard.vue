@@ -1,192 +1,208 @@
 <template>
-    <div class="pet-profile-wrap">
-      <div class="pet-info-wrap">
-        <div class="pet-profile">
-          <div class="pet-profile-title">
-            <div>
-              <h3 class="Heading1-SemiBold" v-if="!pet?.pet_name">펫카드</h3>
-              <h3 class="Heading1-SemiBold" v-else>{{ pet.pet_name }}</h3>
+  <div class="pet-profile-wrap">
+    <div class="pet-info-wrap">
+      <div class="pet-profile">
+        <div class="pet-profile-title">
+          <div>
+            <h3 class="Heading1-SemiBold" v-if="isAddingNewPet">새 펫 추가하기</h3>
+            <h3 class="Heading1-SemiBold" v-else>{{ pet.pet_name }}</h3>
+          </div>
+          <div class="actions">
+            <div v-if="!isEditing" class="card-btn-wrap">
+              <button class="cardBtn" @click="toggleEditMode">{{ isAddingNewPet ? '새 펫 추가' : '정보 수정하기' }}</button>
+              <button v-if="!isAddingNewPet" class="cardBtn" @click="deletePet">삭제하기</button>
             </div>
-            <div class="actions">
-              <div v-if="!isEditing" class="card-btn-wrap">
-                <button class="cardBtn" @click="toggleEditMode">정보 수정하기</button>
-                <button class="cardBtn" @click="deletePet">삭제하기</button>
-              </div>
-              <div v-else class="card-btn-wrap">
-                <button class="cardBtn" @click="saveChanges">저장하기</button>
-                <button class="cardBtn" @click="cancelChanges">취소</button>
-              </div>
+            <div v-else class="card-btn-wrap">
+              <button class="cardBtn" @click="saveChanges">{{ isAddingNewPet ? '추가하기' : '저장하기' }}</button>
+              <button class="cardBtn" @click="cancelChanges">취소</button>
             </div>
           </div>
-          <div class="pet-profile-content-wrap">
-            <div class="pet-profile-img-wrap">
-              <div v-if="!pet.pet_image_url" class="pet-profile-img" @click="triggerFileInput">
-                <div v-if="isEditing" class="img-upload-placeholder">
-                  <button class="img-upload-btn" @click.prevent="triggerFileInput"> <!-- prevent 기본 동작 차단 -->
-                    <img src="/img/plus.32aef565.svg" alt="플러스" />
-                    <p>사진 추가</p>
-                  </button>
-                  <input type="file" ref="fileInput" @change="onFileChange" style="display: none" />
-                </div>
-                <div v-else class="img-upload-placeholder-empty"></div>
-              </div>
-              <div v-else class="pet-profile-img">
-                <img :src="pet.pet_image_url || defaultImg" alt="Pet Image" class="pet-profile-img" />
-                <button v-if="isEditing" class="img-change-btn" @click="triggerFileInput">
-                  <img src="@/assets/images/icon/Icon/imgEdit.svg" alt="프로필 이미지 수정" />
+        </div>
+        <div class="pet-profile-content-wrap">
+          <div class="pet-profile-img-wrap">
+            <div v-if="!pet.pet_image_url" class="pet-profile-img" @click="triggerFileInput">
+              <div v-if="isEditing" class="img-upload-placeholder">
+                <button class="img-upload-btn">
+                  <img src="/img/plus.32aef565.svg" alt="플러스" />
+                  <p>사진 추가</p>
                 </button>
                 <input type="file" ref="fileInput" @change="onFileChange" style="display: none" />
               </div>
+              <div v-else class="img-upload-placeholder-empty"></div>
             </div>
-            <div class="pet-profile-content">
-              <div class="info-item-text">
-                <p class="item-label Body2-Medium title-text">이름</p>
-                <p v-if="!isEditing" class="value-text Body2-Medium sub-text">{{ pet?.pet_name || '이름을 입력해주세요' }}</p>
-                <input v-else v-model="pet.pet_name" type="text" placeholder="이름을 입력해주세요" class="card-edit-input"/>
+            <div v-else class="pet-profile-img" @click="triggerFileInput">
+              <img :src="pet.pet_image_url || defaultImg" alt="Pet Image" class="pet-profile-img" />
+              <button v-if="isEditing" class="img-change-btn" @click.stop="triggerFileInput">
+                <img src="@/assets/images/icon/Icon/imgEdit.svg" alt="프로필 이미지 수정" />
+              </button>
+              <input type="file" ref="fileInput" @change="onFileChange" style="display: none" />
+            </div>
+          </div>
+          <div class="pet-profile-content">
+            <div class="info-item-text">
+              <p class="item-label Body2-Medium title-text">이름</p>
+              <p v-if="!isEditing" class="value-text Body2-Medium sub-text">{{ pet?.pet_name || '이름을 입력해주세요' }}</p>
+              <input v-else v-model="editedPet.pet_name" type="text" placeholder="이름을 입력해주세요" class="card-edit-input" />
+            </div>
+            <div class="info-item-text gender-option-wrap">
+              <p class="item-label Body2-Medium title-text">성별</p>
+              <p v-if="!isEditing" class="value-text Body2-Medium sub-text">{{ pet?.gender ? '남아' : '여아' }}</p>
+              <div v-else class="gender-options">
+                <button class="gender-Btn" :class="{ active: editedPet.gender === true }" @click="editedPet.gender = true">남아</button>
+                <button class="gender-Btn" :class="{ active: editedPet.gender === false }" @click="editedPet.gender = false">여아</button>
               </div>
-              <div class="info-item-text gender-option-wrap">
-                <p class="item-label Body2-Medium title-text">성별</p>
-                <p v-if="!isEditing" class="value-text Body2-Medium sub-text">{{ pet?.gender ? '남아' : '여아' }}</p>
-                <div v-else class="gender-options">
-                  <button class="gender-Btn" :class="{ active: pet?.gender === true }" @click="pet.gender = true">남아</button>
-                  <button class="gender-Btn" :class="{ active: pet?.gender === false }" @click="pet.gender = false">여아</button>
-                </div>
-              </div>
-              <div class="info-item-text">
-                <p class="item-label Body2-Medium title-text">생년월일</p>
-                <p v-if="!isEditing" class="value-text Body2-Medium sub-text">{{ pet?.birth_date || 'YYYY-MM-DD' }}</p>
-                <input v-else v-model="pet.birth_date" type="date" class="card-edit-input"/>
-              </div>
-              <div class="info-item-text">
-                <p class="item-label Body2-Medium title-text">견종</p>
-                <p v-if="!isEditing" class="value-text Body2-Medium sub-text">{{ pet?.pet_breed || '견종을 입력해주세요' }}</p>
-                <input v-else v-model="pet.pet_breed" type="text" placeholder="견종을 입력해주세요" class="card-edit-input"/>
-              </div>
-              <div class="info-item-text">
-                <p class="item-label Body2-Medium title-text">소개글</p>
-                <p v-if="!isEditing" class="value-text Body2-Medium sub-text">{{ pet?.pet_intro || '소개글을 작성해 주세요' }}</p>
-                <input v-else v-model="pet.pet_intro" type="text" class="card-edit-input" placeholder="소개글을 작성해 주세요"/>
-              </div>
+            </div>
+            <div class="info-item-text">
+              <p class="item-label Body2-Medium title-text">생년월일</p>
+              <p v-if="!isEditing" class="value-text Body2-Medium sub-text">{{ pet?.birth_date || 'YYYY-MM-DD' }}</p>
+              <input v-else v-model="editedPet.birth_date" type="date" class="card-edit-input" />
+            </div>
+            <div class="info-item-text">
+              <p class="item-label Body2-Medium title-text">견종</p>
+              <p v-if="!isEditing" class="value-text Body2-Medium sub-text">{{ pet?.pet_breed || '견종을 입력해주세요' }}</p>
+              <input v-else v-model="editedPet.pet_breed" type="text" placeholder="견종을 입력해주세요" class="card-edit-input" />
+            </div>
+            <div class="info-item-text">
+              <p class="item-label Body2-Medium title-text">소개글</p>
+              <p v-if="!isEditing" class="value-text Body2-Medium sub-text">{{ pet?.pet_intro || '소개글을 작성해 주세요' }}</p>
+              <input v-else v-model="editedPet.pet_intro" type="text" class="card-edit-input" placeholder="소개글을 작성해 주세요" />
             </div>
           </div>
         </div>
       </div>
     </div>
-  </template>
-  
-  <script>
-  import axios from 'axios';
-  
-  export default {
-    props: {
-      pet: {
-        type: Object,
-        required: true,
-        default: () => ({
-          pet_id: null,
-          pet_name: '',
-          pet_breed: '',
-          pet_age: '',
-          pet_intro: '',
-          pet_image_url: '',
-          birth_date: '',
-          gender: null
-        })
+  </div>
+</template>
+
+<script>
+import axios from 'axios';
+
+export default {
+  props: {
+    pet: {
+      type: Object,
+      required: true,
+      default: () => ({
+        pet_name: '',
+        pet_breed: '',
+        pet_intro: '',
+        pet_image_url: '',
+        birth_date: '',
+        gender: null,
+      }),
+    },
+  },
+  data() {
+    return {
+      isEditing: false,
+      isAddingNewPet: !('pet_id' in this.pet),  // pet_id가 없으면 새 펫 추가 모드
+      editedPet: { ...this.pet },
+      defaultImg: '/path/to/default/img.png',
+    };
+  },
+  watch: {
+    pet: {
+      handler(newValue) {
+        this.editedPet = { ...newValue };
+        this.isAddingNewPet = !('pet_id' in newValue);  // pet_id가 없으면 새 펫 추가 모드
+      },
+      deep: true,
+      immediate: true,
+    },
+  },
+  methods: {
+    toggleEditMode() {
+      this.isEditing = !this.isEditing;
+
+      if (!this.isEditing) {
+        this.editedPet = { ...this.pet };
+        this.isAddingNewPet = !('pet_id' in this.pet);  // 모드 갱신
       }
     },
-    data() {
-      return {
-        isEditing: false,
-        editedPet: { ...this.pet },
-        defaultImg: '/path/to/default/img.png'
-      };
-    },
-    watch: {
-      pet: {
-        handler(newValue) {
-          this.editedPet = { ...newValue };
-        },
-        deep: true,
-        immediate: true
+    async saveChanges() {
+      if (this.isAddingNewPet) {
+        await this.addPet();
+      } else {
+        await this.updatePet();
       }
     },
-    methods: {
-      toggleEditMode() {
-        if (this.isEditing) {
-          this.saveChanges();
+    async addPet() {
+      try {
+        const response = await axios.post('http://localhost:3000/api/myinfo/addpet', this.editedPet);
+        console.log("Pet added successfully:", response.data);
+
+        this.$emit('update-pet', response.data);  // 추가된 펫 데이터 반영
+        this.isEditing = false;
+        this.isAddingNewPet = false;
+
+      } catch (error) {
+        console.error("Error adding pet information:", error);
+      }
+    },
+    async updatePet() {
+      try {
+        const response = await axios.post(`http://localhost:3000/api/myinfo/pet/${this.pet.pet_id}`, this.editedPet);
+        console.log("Pet information updated successfully:", response.data);
+
+        this.$emit('update-pet', this.editedPet);  // 수정된 펫 데이터 반영
+        this.isEditing = false;
+
+      } catch (error) {
+        console.error("Error updating pet information:", error);
+      }
+    },
+    cancelChanges() {
+      this.editedPet = { ...this.pet };
+      this.isEditing = false;
+      this.isAddingNewPet = !('pet_id' in this.pet);  // 상태 갱신
+    },
+    triggerFileInput() {
+      if (this.$refs.fileInput) {
+        this.$refs.fileInput.click();
+      }
+    },
+    async onFileChange(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const formData = new FormData();
+        formData.append('petImage', file);
+
+        if ('pet_id' in this.pet) {
+          formData.append('pet_id', this.pet.pet_id);  // 수정 모드일 때만 pet_id를 전송
+          console.log("Sending pet_id:", this.pet.pet_id);  // 디버깅용 로그
         } else {
-          this.editedPet = { ...this.pet };
-          this.isEditing = true;
+          console.error('pet_id가 없습니다.');
+          return;
         }
-      },
-      async saveChanges() {
+
         try {
-          if (!this.editedPet.pet_image_url) {
-            console.error('이미지 URL이 설정되지 않았습니다.');
-            return;
-          }
-  
-          if (this.editedPet.gender === undefined) {
-            this.editedPet.gender = null;
-          }
-  
-          const dataToSend = {
-            pet_id: this.editedPet.pet_id,
-            pet_name: this.editedPet.pet_name,
-            pet_breed: this.editedPet.pet_breed,
-            pet_age: this.editedPet.birth_date,
-            pet_intro: this.editedPet.pet_intro,
-            pet_image_url: this.editedPet.pet_image_url,
-            birth_date: this.editedPet.birth_date,
-            gender: this.editedPet.gender
-          };
-          console.log('들어간 값: ', dataToSend);
-  
-          const response = await axios.post('http://localhost:3000/api/myinfo/addpet', dataToSend);
-          console.log("Pet information updated successfully:", response.data);
-  
-        } catch (error) {
-          console.error("Error updating pet information:", error);
-        }
-      },
-      async onFileChange(event) {
-        const file = event.target.files[0];
-        if (file) {
-          const formData = new FormData();
-          formData.append('petImage', file);
-          formData.append('pet_id', this.editedPet.pet_id);
-  
-          try {
-            const response = await axios.post('http://localhost:3000/api/profile/petupload', formData, {
-              headers: {
-                'Content-Type': 'multipart/form-data',
-              },
-            });
-  
+          const response = await axios.post('http://localhost:3000/api/profile/petupload', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
+
+          // 서버 응답에서 imageUrl이 존재하는지 확인
+          if (response.data.success && response.data.imageUrl) {
             this.editedPet.pet_image_url = response.data.imageUrl;
             console.log('업로드된 이미지 URL:', response.data.imageUrl);
-  
-          } catch (error) {
-            console.error('파일 업로드 중 오류 발생:', error);
+          } else {
+            console.error('이미지 URL이 서버 응답에 포함되지 않았습니다.');
           }
+        } catch (error) {
+          console.error('파일 업로드 중 오류 발생:', error);
+          console.log("에러 응답 데이터:", error.response?.data);  // 서버에서 반환된 에러 메시지 확인
         }
-      },
-      triggerFileInput() {
-        this.$refs.fileInput.click();
-      },
-      cancelChanges() {
-        this.editedPet = { ...this.pet };
-        this.isEditing = false;
-      },
-      deletePet() {
-        this.$emit('delete-pet', this.pet.pet_id);
       }
+    },
+    deletePet() { 
+      this.$emit('delete-pet', this.pet.pet_id);
     }
-  };
-  </script>
-  
-  
-  <style scoped>
+  }
+};
+</script>
+
+<style scoped>
   .pet-profile-wrap {
     display: flex;
     flex-direction: column;
@@ -334,5 +350,4 @@
     font-size: 24px;
     color: #333;
   }
-  </style>
-  
+</style>

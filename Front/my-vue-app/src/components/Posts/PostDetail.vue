@@ -10,7 +10,7 @@
       <div class="post-info">
         <div class="user-profile">
           <div class="user-avatar">
-            <img :src="getAvatarUrl(postData.author.avatar)" alt="User Avatar" class="icon-img" />
+            <img :src="postData.profile_image_url || 'default-image-url'" alt="User Avatar" class="icon-img"/>
           </div>
           <div class="user-name">
             <div class="Body1-Medium title-text">{{ postData.author.name }}</div>
@@ -52,8 +52,8 @@
       <div class="comment-info-wrapper">
         <div class="Heading2-SemiBold">댓글 <span class="info-text">{{ postData.comments }}</span>개</div>
         <div class="comment-form-box">
-          <textarea id="comment-editor" class="Body1-Medium" cols="30" rows="10" style="resize: none;" placeholder="댓글을 입력해 주세요"></textarea>
-          <button class="Btn comment-btn" type="submit">등록</button>
+          <textarea id="comment-editor" v-model="newComment" class="Body1-Medium" cols="30" rows="10" style="resize: none;" placeholder="댓글을 입력해 주세요"></textarea>
+          <button class="Btn comment-btn" @click="submitComment" type="submit">등록</button>
         </div>
       </div>
     </div>
@@ -75,6 +75,7 @@ export default {
     return {
       postData: null,  // 초기 상태는 null로 설정
       isLikeActive: false,
+      newComment: '', // 새로운 댓글의 내용을 저장하기 위한 데이터
     };
   },
   methods: {
@@ -86,6 +87,7 @@ export default {
           const post = response.data;
           this.postData = {
             id: post.post_id,
+            profile_image_url: post.profile_image_url,
             category: '자유게시판',  // 카테고리는 하드코딩
             title: post.title,
             content: post.description,
@@ -96,23 +98,50 @@ export default {
             },
             views: post.view_count,
             likes: post.likeCount,
-            comments: post.totalCommentsCount  // 기본값
+            comments: Number(post.totalCommentsCount)  // 숫자 형식으로 변환
           };
+          this.isLikeActive = post.userHasLiked; // 사용자가 이 게시글에 좋아요를 눌렀는지 상태를 설정
         })
         .catch(error => {
           console.error('Error fetching post details:', error);
         });
     },
-    goListPage() {
-      this.$router.push({ name: 'PostList' });
-    },
     toggleLike() {
-      if (this.isLikeActive) {
-        this.postData.likes--;
-      } else {
-        this.postData.likes++;
+      const postId = this.postData.id;
+
+      axios.post(`http://localhost:3000/api/notice/like/${postId}`)
+        .then(response => {
+          if (response.data.liked) {
+            this.postData.likes++;
+          } else {
+            this.postData.likes--;
+          }
+          this.isLikeActive = response.data.liked;
+        })
+        .catch(error => {
+          console.error('좋아요 처리 중 에러 발생:', error);
+        });
+    },
+    submitComment() {
+      const postId = this.postData.id;
+
+      // 빈 댓글을 막기 위해 조건 추가
+      if (this.newComment.trim() === '') {
+        alert('댓글을 입력해 주세요.');
+        return;
       }
-      this.isLikeActive = !this.isLikeActive;
+
+      axios.post(`http://localhost:3000/api/notice/comment/${postId}`, {
+        c_description: this.newComment
+      })
+      .then(response => {
+        alert('댓글이 성공적으로 등록되었습니다.');
+        this.postData.comments++; // 댓글 수 증가
+        this.newComment = ''; // 댓글 입력란 초기화
+      })
+      .catch(error => {
+        console.error('댓글 등록 중 에러 발생:', error);
+      });
     },
     timeAgo(date) {
       const now = new Date();
@@ -135,6 +164,9 @@ export default {
     getAvatarUrl(avatarPath) {
       // 이 함수는 이미지 경로를 제대로 해석하여 반환합니다
       return require(`@/assets/images/cat01.png`);
+    },
+    goListPage() {
+      this.$router.push({ name: 'PostList' });
     }
   },
   created() {
