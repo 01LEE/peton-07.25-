@@ -108,57 +108,29 @@ exports.createPost = (req, res) => {
   );
 };
 
-// 게시물 상세 정보를 가져오는 서비스 함수
+// 게시물 상세 정보를 가져오는 서비스
 exports.getPostDetail = (req, res) => {
   const post_id = req.params.post_id;
   const login_id = req.session.login_id;
   const user_id = req.session.userid;
 
-  console.log("로그인 데이터 (세션):", req.session);
-  console.log("login_id:", login_id);
-  console.log("user_id:", user_id);
-
-  // 게시물 조회 수를 증가시키는 쿼리
   const incrementViewCountQuery = 'UPDATE noticeboard SET view_count = view_count + 1 WHERE post_id = ?';
-
-  // 게시물 상세 정보를 가져오는 쿼리
   const postQuery = `
-    SELECT 
-      n.*, 
-      (SELECT COUNT(*) FROM \`like\` l WHERE l.post_id = n.post_id) AS likeCount 
-    FROM 
-      noticeboard n 
-    WHERE 
-      n.post_id = ?`;
-
-  // 댓글을 가져오는 쿼리
+    SELECT n.*, (SELECT COUNT(*) FROM \`like\` l WHERE l.post_id = n.post_id) AS likeCount
+    FROM noticeboard n WHERE n.post_id = ?`;
   const commentQuery = `
-    SELECT 
-      c.*, 
-      (SELECT COUNT(*) FROM comment_like cl WHERE cl.comment_id = c.comment_id) AS likeCount,
-      (SELECT COUNT(*) FROM comment_unlike cu WHERE cu.comment_id = c.comment_id) AS dislikeCount
-    FROM 
-      comment c 
-    WHERE 
-      c.post_id = ?`;
+    SELECT c.*, 
+            (SELECT COUNT(*) FROM comment_like cl WHERE cl.comment_id = c.comment_id) AS likeCount,
+            (SELECT COUNT(*) FROM comment_unlike cu WHERE cu.comment_id = c.comment_id) AS dislikeCount
+    FROM comment c WHERE c.post_id = ?`;
+  const recommentQuery = `SELECT * FROM recomment WHERE comment_id = ?`;
 
-  // 댓글에 대한 답글(recomment)을 가져오는 쿼리
-  const recommentQuery = `
-    SELECT 
-      * 
-    FROM 
-      recomment 
-    WHERE 
-      comment_id = ?`;
-
-  // 게시물 조회 수를 증가시킵니다.
   db.query(incrementViewCountQuery, [post_id], (err) => {
     if (err) {
       console.error("게시물 조회 수 증가 중 에러 발생: ", err);
       return res.status(500).json({ error: '서버 에러' });
     }
 
-    // 게시물 상세 정보를 가져옵니다.
     db.query(postQuery, [post_id], (err, postResults) => {
       if (err) {
         console.error("게시물 조회 중 에러 발생: ", err);
@@ -169,54 +141,42 @@ exports.getPostDetail = (req, res) => {
       }
       const post = postResults[0];
 
-      // 댓글을 가져옵니다.
-      db.query(commentQuery, [post_id], (err, commentResults) => {
+      db.query(commentQuery, [post_id], async (err, commentResults) => {
         if (err) {
           console.error("댓글 조회 중 에러 발생: ", err);
           return res.status(500).json({ error: '서버 에러' });
         }
 
-        // 댓글과 추가 댓글을 포함한 결과를 저장할 배열
-        const commentsWithRecomments = [];
-        let totalCommentsCount = 0;
-
-        // 각 댓글에 대해 추가 댓글을 가져오는 함수
-        const fetchRecomments = (index) => {
-          if (index >= commentResults.length) {
-            // 모든 댓글과 추가 댓글을 가져온 후 JSON 응답
-            return res.json(
-              post,
-              post.likeCount,
-              commentsWithRecomments,
-              totalCommentsCount
-            );
-          }
-
-          const comment = commentResults[index];
-
-          // 추가 댓글을 가져옵니다.
-          db.query(recommentQuery, [comment.comment_id], (err, recommentResults) => {
-            if (err) {
-              console.error("추가 댓글 조회 중 에러 발생: ", err);
-              return res.status(500).json({ error: '서버 에러' });
-            }
-
-            // 댓글에 추가 댓글을 추가합니다.
-            comment.recomments = recommentResults;
-
-            // 댓글과 추가 댓글을 결과 배열에 추가합니다.
-            commentsWithRecomments.push(comment);
-
-            // 총 댓글 수를 업데이트합니다.
-            totalCommentsCount += 1 + recommentResults.length;
-
-            // 다음 댓글의 추가 댓글을 가져옵니다.
-            fetchRecomments(index + 1);
+        const fetchRecommentsForComments = commentResults.map(comment => {
+          return new Promise((resolve, reject) => {
+            db.query(recommentQuery, [comment.comment_id], (err, recommentResults) => {
+              if (err) {
+                return reject(err);
+              }
+              comment.recomments = recommentResults;
+              resolve(comment);
+            });
           });
-        };
+        });
 
-        // 첫 번째 댓글의 추가 댓글을 가져오기 시작
-        fetchRecomments(0);
+        try {
+          const commentsWithRecomments = await Promise.all(fetchRecommentsForComments);
+          const totalCommentsCount = commentsWithRecomments.reduce((count, comment) => {
+            return count + 1 + comment.recomments.length;
+          }, 0);
+
+          const responseObject = {
+            post,
+            likeCount: post.likeCount,
+            commentsWithRecomments,
+            totalCommentsCount
+          };
+
+          res.json(responseObject);
+        } catch (err) {
+          console.error("대댓글 조회 중 에러 발생: ", err);
+          res.status(500).json({ error: '서버 에러' });
+        }
       });
     });
   });

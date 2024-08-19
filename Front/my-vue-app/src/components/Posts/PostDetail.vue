@@ -2,7 +2,7 @@
   <div class="PostDetail-wrap" v-if="postData">
     <div class="PostDetail-container">
       <div class="post-category">
-        <span class="Caption-SemiBold">{{ postData.category }}</span>
+        <span class="Caption-SemiBold">자유게시판</span> <!-- 카테고리는 하드코딩 -->
       </div>
       <div class="post-title">
         <h2 class="Title3-Bold">{{ postData.title }}</h2>
@@ -56,6 +56,7 @@
           <button class="Btn comment-btn" @click="submitComment" type="submit">등록</button>
         </div>
       </div>
+      <!-- 댓글과 대댓글을 표시하는 부분은 추가로 구현 필요 -->
     </div>
     <div class="goListPage">
       <button class="Btn" @click="goListPage">목록으로 돌아가기</button>
@@ -84,23 +85,24 @@ export default {
 
       axios.get(`http://localhost:3000/api/notice/${postId}`)
         .then(response => {
-          const post = response.data;
+          const data = response.data;
           this.postData = {
-            id: post.post_id,
-            profile_image_url: post.profile_image_url,
+            id: data.post.post_id,
+            profile_image_url: data.post.profile_image_url,
             category: '자유게시판',  // 카테고리는 하드코딩
-            title: post.title,
-            content: post.description,
+            title: data.post.title,
+            content: data.post.description,
             author: {
-              name: post.nick_name,
+              name: data.post.nick_name,
               avatar: '@/assets/images/cat01.png',  // 기본 아바타 이미지
-              time: post.write_time,  // 시간 데이터 그대로 저장
+              time: data.post.write_time,  // 시간 데이터 그대로 저장
             },
-            views: post.view_count,
-            likes: post.likeCount,
-            comments: Number(post.totalCommentsCount)  // 숫자 형식으로 변환
+            views: data.post.view_count,
+            likes: data.likeCount,
+            comments: data.totalCommentsCount,
+            commentsWithRecomments: data.commentsWithRecomments
           };
-          this.isLikeActive = post.userHasLiked; // 사용자가 이 게시글에 좋아요를 눌렀는지 상태를 설정
+          this.isLikeActive = data.userHasLiked; // 사용자가 이 게시글에 좋아요를 눌렀는지 상태를 설정
         })
         .catch(error => {
           console.error('Error fetching post details:', error);
@@ -125,7 +127,6 @@ export default {
     submitComment() {
       const postId = this.postData.id;
 
-      // 빈 댓글을 막기 위해 조건 추가
       if (this.newComment.trim() === '') {
         alert('댓글을 입력해 주세요.');
         return;
@@ -162,7 +163,6 @@ export default {
       }
     },
     getAvatarUrl(avatarPath) {
-      // 이 함수는 이미지 경로를 제대로 해석하여 반환합니다
       return require(`@/assets/images/cat01.png`);
     },
     goListPage() {
