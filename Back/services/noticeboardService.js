@@ -184,60 +184,31 @@ exports.getPostDetail = (req, res) => {
 
 // 게시물을 삭제하는 서비스 함수
 exports.deletePost = (req, res) => {
-  const user_id = req.session.userid;
-  const post_id = req.params.post_id;
+  const user_id = req.session.userid; // 현재 로그인된 사용자 ID
+  const post_id = req.params.post_id; // 요청된 게시물 ID
 
   // 게시글의 작성자와 현재 로그인된 사용자가 일치하는지 확인
   db.query('SELECT user_id FROM noticeboard WHERE post_id = ?', [post_id], (err, results) => {
     if (err) {
       console.error('게시글 조회 중 에러 발생:', err);
-      return res.status(500).send('서버 에러');
+      return res.status(500).json({ success: false, message: '서버 에러' });
     }
     if (results.length === 0) {
-      return res.status(404).send('게시물이 존재하지 않습니다.');
+      return res.status(404).json({ success: false, message: '게시물이 존재하지 않습니다.' });
     }
 
     // 권한 확인
     if (!isYoursNoticeboard(user_id, results[0].user_id)) {
-      return res.redirect(`/noticeboard/${post_id}`);
+      return res.status(403).json({ success: false, message: '권한이 없습니다.' });
     }
 
-    // 댓글을 조회하고 대댓글 삭제 후 댓글 삭제 및 게시글 삭제
-    db.query('SELECT comment_id FROM comment WHERE post_id = ?', [post_id], (err, commentResults) => {
+    // 게시글 삭제
+    db.query('DELETE FROM noticeboard WHERE post_id = ?', [post_id], (err) => {
       if (err) {
-        console.error('댓글 조회 중 에러 발생:', err);
-        return res.status(500).send('서버 에러');
+        console.error('게시글 삭제 중 에러 발생:', err);
+        return res.status(500).json({ success: false, message: '서버 에러' });
       }
-
-      // 대댓글 삭제
-      const comments = commentResults.map(row => row.comment_id);
-      
-      if (comments.length > 0) {
-        const commentIds = comments.map(() => '?').join(',');
-        db.query(`DELETE FROM recomment WHERE comment_id IN (${commentIds})`, comments, (err) => {
-          if (err) {
-            console.error('대댓글 삭제 중 에러 발생:', err);
-            return res.status(500).send('서버 에러');
-          }
-
-          // 댓글 삭제
-          db.query('DELETE FROM comment WHERE post_id = ?', [post_id], (err) => {
-            if (err) {
-              console.error('댓글 삭제 중 에러 발생:', err);
-              return res.status(500).send('서버 에러');
-            }
-
-            // 게시글 삭제
-            db.query('DELETE FROM noticeboard WHERE post_id = ?', [post_id], (err) => {
-              if (err) {
-                console.error('게시글 삭제 중 에러 발생:', err);
-                return res.status(500).send('서버 에러');
-              }
-              res.redirect('/noticeboard');
-            });
-          });
-        });
-      }
+      res.json({ success: true, message: '게시글이 성공적으로 삭제되었습니다.' });
     });
   });
 };

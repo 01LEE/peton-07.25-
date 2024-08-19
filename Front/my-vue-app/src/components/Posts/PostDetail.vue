@@ -47,6 +47,11 @@
           </div>
         </button>
       </div>
+
+      <!-- 삭제 버튼 추가 -->
+      <div class="deleteBtn-wrap">
+        <button class="Btn deleteBtn" @click="deletePost">삭제</button>
+      </div>
     </div>
     <div class="post-detail-comments-section">
       <div class="comment-info-wrapper">
@@ -143,6 +148,24 @@ export default {
       .catch(error => {
         console.error('댓글 등록 중 에러 발생:', error);
       });
+    },
+    deletePost() {
+      const postId = this.postData.id;
+
+      if (confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
+        axios.post(`http://localhost:3000/api/notice/delete/${postId}`)
+          .then(response => {
+            if (response.data.success) {
+              alert('게시글이 성공적으로 삭제되었습니다.');
+              this.$router.push({ name: 'PostList' }); // 게시물 목록 페이지로 이동
+            } else {
+              alert('게시글 삭제에 실패하였습니다.');
+            }
+          })
+          .catch(error => {
+            console.error('게시글 삭제 중 에러 발생:', error);
+          });
+      }
     },
     timeAgo(date) {
       const now = new Date();
