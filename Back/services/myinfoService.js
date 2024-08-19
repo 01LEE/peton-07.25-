@@ -170,14 +170,15 @@ exports.updatepetdetail = (req, res) => {
   });
 };
 
+
 // 반려동물 정보 삭제 함수
 exports.deletepetdetail = (req, res) => {
   const petId = req.params.pet_id;
+  console.log('delete pet id : ', petId);
 
   const query = `DELETE FROM pet WHERE pet_id = ?`;
 
   db.query(query, [petId], (err, result) => {
-    console.log('Pet deleted:', result);
     if (err) {
       console.error('Error deleting pet', err);
       return res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });

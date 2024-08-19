@@ -45,7 +45,7 @@
       <PetCard v-for="(pet, index) in pets" :key="index" :pet="pet" :is-new="!pet.pet_id"></PetCard>
       <div class="Pet-card-create-wrap" @click="addNewPet">
         <div class="Pet-card-create">
-          <img src="/img/plus.32aef565.svg" alt="플러스">
+          <p>+</p>
           <p>펫 정보 추가하기</p>
         </div>
       </div>
@@ -115,7 +115,7 @@ export default {
 
         const response = await axios.post('http://localhost:3000/api/profile/upload', formData, {
           headers: {
-            'Content-Type': 'multipart/form-data'
+            'Content-Type': 'multipart/form-data' 
           }
         });
 
@@ -304,6 +304,33 @@ button.img-change-btn>img {
   gap: 10px;
 }
 
+.img-save-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 16px;
+  background-color: var(--primary-color); /* 기본 버튼 색상 */
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: var(--shadow-emphasize);
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.img-save-btn:hover {
+  background-color: var(--primary-color-hover); /* 호버 시 색상 */
+  box-shadow: var(--shadow-emphasize-hover); /* 호버 시 그림자 */
+}
+
+.img-save-btn:active {
+  background-color: var(--primary-color-active); /* 클릭 시 색상 */
+}
+
+
 /* 펫정보 추가 */
 .Pet-card-create-wrap {
   display: flex;
@@ -322,6 +349,19 @@ button.img-change-btn>img {
   justify-content: center;
   align-items: center;
   gap: 14px;
+
+  
+}
+
+.Pet-card-create p {
+  font-size: 16px; /* 폰트 사이즈 추가 */
+  font-weight: 500; /* 폰트 두께 추가 */
+  color: #333; /* 텍스트 색상 추가 */
+}
+
+.Pet-card-create p:first-of-type {
+  font-size: 24px; /* + 기호 폰트 사이즈 추가 */
+  font-weight: bold; /* + 기호 폰트 두께 추가 */
 }
 </style>
 

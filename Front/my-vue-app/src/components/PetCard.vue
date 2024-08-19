@@ -23,7 +23,7 @@
             <div v-if="!pet.pet_image_url" class="pet-profile-img" @click="triggerFileInput">
               <div v-if="isEditing" class="img-upload-placeholder">
                 <button class="img-upload-btn">
-                  <img src="/img/plus.32aef565.svg" alt="플러스" />
+                  <p>+</p>
                   <p>사진 추가</p>
                 </button>
                 <input type="file" ref="fileInput" @change="onFileChange" style="display: none" />
@@ -195,9 +195,21 @@ export default {
         }
       }
     },
-    deletePet() { 
-      this.$emit('delete-pet', this.pet.pet_id);
+    async deletePet() {
+  try {
+    const response = await axios.post(`http://localhost:3000/api/myinfo/deletepet/${this.pet.pet_id}`);
+    if (response.data.success) {
+      alert(response.data.message);
+      // 추가적인 작업을 여기에 추가할 수 있습니다 (예: 페이지 리로드, 데이터 업데이트 등)
+    } else {
+      alert('삭제 중 오류가 발생했습니다: ' + response.data.message);
     }
+  } catch (error) {
+    console.error('Error deleting pet:', error);
+    alert('서버와의 통신 중 오류가 발생했습니다.');
+  }
+},
+
   }
 };
 </script>
