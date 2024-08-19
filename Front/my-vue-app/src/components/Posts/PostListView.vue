@@ -33,6 +33,7 @@ export default {
           this.PostData = response.data.map(post => ({
             id: post.post_id,
             category: '자유게시판',  // 임의의 카테고리
+            profile_image_url: post.profile_image_url,
             title: post.title,
             content: post.description,
             author: {

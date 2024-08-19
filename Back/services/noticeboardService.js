@@ -214,40 +214,23 @@ exports.deletePost = (req, res) => {
 };
 
 // 게시글을 수정하는 서비스 함수
-exports.getEditDetail = (req, res) => {
-  const user_id = req.session.userid;
+exports.editPost = (req, res) => {
+  const { title, description } = req.body; // include category
   const post_id = req.params.post_id;
-  db.query(`SELECT * FROM noticeboard WHERE post_id = ${post_id}`, (err, results) => {
-    if(!isYoursNoticeboard(user_id, results[0].user_id)){
-      return res.redirect(`/noticeboard/${post_id}`);
-      // return res.status(403).send('권한이 없습니다.');
+
+  db.query(
+    'UPDATE noticeboard SET title = ?, description = ?, update_time = NOW() WHERE post_id = ?', 
+    [title, description, post_id], 
+    (err, result) => {
+      if (err) {
+        console.error('게시글 수정 중 에러 발생:', err);
+        return res.status(500).json({ error: '서버 에러' }); 
+      }
+      res.status(200).json({ message: '게시글이 성공적으로 수정되었습니다.' });
     }
-    if (err) {
-      console.error("게시물 조회 중 에러 발생: ", err);
-      res.status(500).send('서버 에러');
-      return;
-    }
-    if (results.length === 0) {
-      return res.status(404).send('게시물이 존재하지 않습니다.');
-    }
-    return res.render('noticeboard/edit', { post: results[0] });
-    // res.render('/noticeboard/edit/:post_id', {post : results[0]});
-  });
+  );
 };
 
-// 게시글을 수정하는 서비스 함수
-exports.editPost = (req, res) => {
-  const { title, description } = req.body;
-  const post_id = req.params.post_id;
-  db.query('UPDATE noticeboard SET title = ?, description = ?, update_time = NOW() WHERE post_id = ?', [title, description, post_id], (err, result) => {
-    if (err) {
-      console.error('게시글 수정 중 에러 발생:', err);
-      return res.status(500).send('서버 에러');
-    }
-    // 수정 후 게시글 상세 페이지로 리다이렉트
-    return res.redirect(`/noticeboard/${post_id}`);
-  });
-};
 
 // 댓글을 추가하는 서비스 함수
 exports.addComment = (req, res) => {

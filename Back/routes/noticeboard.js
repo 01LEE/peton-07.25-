@@ -18,11 +18,8 @@ router.get('/:post_id', noticeboardService.getPostDetail);
 // POST 요청: 게시물 삭제를 데이터 베이스에 저장
 router.post('/delete/:post_id', isAuthenticated, noticeboardService.deletePost);
 
-// GET 요청: 게시글 수정 폼을 렌더링
-router.get('/noticeboard/edit/:post_id', isAuthenticated, noticeboardService.getEditDetail);
-
-// POST 요청: 수정된 게시글을 데이터베이스에 저장
-router.post('/noticeboard/edit/:post_id',isAuthenticated, noticeboardService.editPost);
+// GET 요청: 게시글 수정
+router.put('/edit/:post_id', isAuthenticated, noticeboardService.editPost);
 
 // POST 요청: 댓글 추가
 router.post('/comment/:post_id', isAuthenticated, noticeboardService.addComment);

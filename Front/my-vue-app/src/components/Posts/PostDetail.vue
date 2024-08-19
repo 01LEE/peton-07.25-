@@ -52,6 +52,9 @@
       <div class="deleteBtn-wrap">
         <button class="Btn deleteBtn" @click="deletePost">삭제</button>
       </div>
+      <div class="editBtn-wrap">
+        <button class="Btn editBtn" @click="editPost">수정</button>
+      </div>
     </div>
     <div class="post-detail-comments-section">
       <div class="comment-info-wrapper">
@@ -166,6 +169,10 @@ export default {
             console.error('게시글 삭제 중 에러 발생:', error);
           });
       }
+    },
+    editPost() {
+      const postId = this.postData.id;
+      this.$router.push(`/Community/Peton/Post/${postId}/edit`);
     },
     timeAgo(date) {
       const now = new Date();
