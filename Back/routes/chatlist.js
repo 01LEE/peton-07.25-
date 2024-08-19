@@ -6,14 +6,16 @@ const db = require('../db');
 const isAuthenticated = require('../middlewares/isAuthenticated');
 
 // 채팅방 목록 API 엔드포인트
+/*
 router.get('/chatlist', isAuthenticated, (req, res) => {
   const userId = req.session.userid; // 세션에서 사용자 ID를 가져옵니다.
 
   const query = `
-    SELECT c.id, p2.user_name as other_user_name
+    SELECT c.id, u.nick_name as other_user_name
     FROM conversations c
     JOIN participants p1 ON c.id = p1.conversation_id AND p1.user_id = ?
     JOIN participants p2 ON c.id = p2.conversation_id AND p2.user_id != ?
+    JOIN user u ON p2.user_id = u.user_id
   `;
 
   db.query(query, [userId, userId], (err, results) => {
@@ -21,6 +23,13 @@ router.get('/chatlist', isAuthenticated, (req, res) => {
       console.error('Database query error:', err);
       return res.status(500).json({ message: 'Database error' }); // 오류 발생시 JSON 반환
     }
+
+    if (results.length === 0) {
+      console.log('No chat rooms found for user:', userId);
+      return res.status(404).json({ message: 'No chat rooms found' });
+    }
+    
+    console.log('Query Results:', results); // 결과 확인 로그 추가
 
     res.json(results); // JSON 형식으로 채팅방 목록 반환
   });
@@ -84,7 +93,7 @@ router.delete('/deleteChatRoom', isAuthenticated, (req, res) => {
 });
 
 module.exports = router;
-
+*/
 
 // 1.0 안정화 버전 0808 pm 09:42
 /*

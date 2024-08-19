@@ -48,11 +48,14 @@
         return;
       }
     
-      const query = 'INSERT INTO messages (conversation_id, sender, receiver, message) VALUES (?, ?, ?, ?)';
+      const query = `
+    INSERT INTO messages (conversation_id, sender, receiver, message) 
+    VALUES (?, (SELECT login_id FROM user WHERE user_id = ?), ?, ?)
+  `;
     
       db.query(query, [roomId, sender, receiver, message], (err) => {
         if (err) {
-          console.error('데이터베이스 오류:', err);
+          console.error('메시지 저장 중 데이터베이스 오류 발생:', err);
           socket.emit('error', { message: 'Database error' });
         } else {
           console.log('메시지 전송 성공:', data);

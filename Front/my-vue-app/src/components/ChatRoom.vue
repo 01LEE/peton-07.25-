@@ -5,13 +5,14 @@
       <div class="top-bar">
         <button class="back-button" @click="goBack">＜</button>
         <div class="chat-partner">
-          {{ otherUserNickname }}
+          {{ selectedUser?.nick_name || '알 수 없는 유저' }}
         </div>
         <button class="close-button" @click="closeChatRoom">X</button>
       </div>
 
-      <!-- 채팅 내용 영역 -->
-      <div class="chat-content">
+      <!-- 로딩 중일 때 로딩 메시지 표시 -->
+      <div v-if="isLoading">로딩 중...</div>
+      <div v-else class="chat-content">
         <ul>
           <li 
             v-for="message in messages" 
@@ -20,7 +21,10 @@
             <div v-if="!message.isMine" class="sender-name">
               {{ message.senderNickname }}
             </div>
-            <div class="message-text">
+            <div v-if="!message.isMine" class="sender-message-text">
+              {{ message.text }}
+            </div>
+            <div v-if="message.isMine" class="message-text">
               {{ message.text }}
             </div>
           </li>
@@ -41,14 +45,15 @@ import axios from 'axios';  // axios를 임포트합니다.
 import { io } from 'socket.io-client'; // socket.io-client를 임포트합니다.
 
 export default {
-  props: ['roomId', 'otherUserNickname'],
+  props: ['currentUser', 'selectedUser', 'currentRoomId'], // 유저 정보 props로 받기
   data() {
     return {
       showModal: true,
       messages: [],
       newMessage: '',
-      currentUser: null,
       socket: null,
+      roomId: null, // roomId 초기값 설정
+      isLoading: true // 로딩 상태를 관리
     };
   },
   computed: {
@@ -56,26 +61,35 @@ export default {
       return this.currentUser ? this.currentUser.user_id : null;
     }
   },
-  mounted() {
-    if (!this.roomId) {
-      console.error('roomId가 정의되지 않았습니다.'); // roomId가 정의되지 않은 경우 콘솔에 에러를 표시합니다.
-      return;
+  async mounted() {
+    if (!this.currentUser || !this.selectedUser) {
+        console.error('currentUser 또는 selectedUser 정보가 없습니다.');
+        return;
     }
-    
-    this.socket = io('http://localhost:3000'); // socket.io 서버에 연결합니다.
+    console.log('ChatRoom mounted with currentUser:', this.currentUser, 'and selectedUser:', this.selectedUser);
 
-    this.socket.on('connect', () => {
-      console.log('Socket.IO 연결 성공');
-      this.socket.emit('joinRoom', this.roomId);
-    });
+    try {
+        this.roomId = await this.createOrFindChatRoom();
 
-    this.socket.on('connect_error', (error) => {
-      console.error('Socket.IO 연결 실패:', error);
-    });
+        this.socket = io('http://localhost:3000');
+        this.socket.on('connect', () => {
+            console.log('Socket.IO 연결 성공');
+            this.socket.emit('joinRoom', this.roomId);
+        });
 
-    this.fetchCurrentUser();
-    this.fetchMessages();
-    this.setupSocketListeners();
+        this.socket.on('connect_error', (error) => {
+            console.error('Socket.IO 연결 실패:', error);
+        });
+
+        this.setupSocketListeners();
+
+        // 메시지를 로드합니다.
+        await this.fetchMessages();
+    } catch (error) {
+        console.error('채팅방 생성 또는 조회 중 오류 발생:', error);
+    } finally {
+        this.isLoading = false;
+    }
   },
   beforeUnmount() {
     if (this.socket) {
@@ -84,84 +98,103 @@ export default {
     }
   },
   methods: {
-    fetchCurrentUser() {
-  axios.get('/api/getCurrentUser')
-    .then(response => {
-      const userData = response.data;
-
-      if (userData && userData.user_id && userData.login_id) {
-        this.currentUser = {
-          user_id: userData.user_id,
-          nick_name: userData.login_id // login_id를 nick_name으로 사용
-        };
-        console.log('현재 유저:', this.currentUser);
-        this.socket.emit('joinRoom', this.roomId); // 현재 유저가 채팅방에 입장
-      } else {
-        console.error('유저 정보를 불러오지 못했습니다:', response.data);
-      }
-    })
-    .catch(error => {
-      console.error('현재 유저 정보를 가져오는 중 오류 발생:', error);
-    });
-},
-    fetchMessages() {
-      axios.get(`/api/messages?roomId=${this.roomId}`)
-        .then(response => {
-          console.log('로드된 메시지:', response.data);  // 메시지 로드 로그
-          this.messages = response.data;
-        })
-        .catch(error => {
-          console.error('메시지를 가져오는 중 오류 발생:', error);
+    // methods 내에 채팅방 생성 및 이동을 위한 메서드들
+    async createOrFindChatRoom() {
+      try {
+        const response = await axios.post('/api/createOrFindChatRoom', {
+          userId: this.currentUser.user_id,
+          targetUserId: this.selectedUser.user_id,
+          targetUserName: this.selectedUser.nick_name
         });
-    },
-    setupSocketListeners() {
-      this.socket.on('message', (data) => {
-        console.log('서버로부터 수신한 메시지:', data); // 서버에서 수신한 메시지 로그
-        if (data.sender !== this.currentUser) {
-          this.addMessageToChat(data);
+        const chatRoomId = response.data.chatRoomId;
+        if (!chatRoomId) {
+          throw new Error('채팅방 ID를 생성하거나 찾을 수 없습니다.');
         }
-      });
+        return chatRoomId;
+      } catch (error) {
+        console.error('채팅방 생성 또는 조회 중 오류 발생:', error);
+        throw error;
+      }
     },
+
+    async fetchMessages() {
+      if (!this.roomId) {
+        console.error('유효하지 않은 roomId입니다.');
+        return;
+      }
+      try {
+        const response = await axios.get(`/api/messages?roomId=${this.roomId}`);
+        this.messages = response.data.map(msg => ({
+          id: msg.id,
+          sender: msg.sender,
+          senderNickname: msg.senderNickname,
+          text: msg.message,
+          isMine: msg.sender === this.currentUser.login_id
+        }));
+      } catch (error) {
+        console.error('메시지를 가져오는 중 오류 발생:', error);
+      }
+      this.scrollChatToBottom()
+    },
+
     handleSendMessage() {
-  if (this.newMessage.trim() === '') return;
+      if (this.newMessage.trim() === '') return;
 
-  if (!this.currentUser || !this.currentUser.user_id || !this.currentUser.nick_name) {
-    console.error('메시지를 전송할 수 없습니다. 유저 정보가 누락되었습니다.');
-    return;
-  }
+      if (!this.currentUser || !this.currentUser.user_id || !this.currentUser.nick_name) {
+        console.error('메시지를 전송할 수 없습니다. 유저 정보가 누락되었습니다.');
+        return;
+      }
 
-  const chatMessage = {
-    roomId: this.roomId,
-    sender: this.currentUser.user_id,
-    senderNickname: this.currentUser.nick_name,
-    receiver: 'all',  
-    message: this.newMessage
-  };
+      const chatMessage = {
+        roomId: this.roomId,
+        sender: this.currentUser.user_id,
+        senderNickname: this.currentUser.nick_name,
+        receiver: this.selectedUser.user_id,
+        message: this.newMessage
+      };
 
-  console.log('전송할 메시지:', chatMessage);
+      console.log('전송할 메시지:', chatMessage);
 
-  this.socket.emit('sendMessage', chatMessage);
-  // this.addMessageToChat(chatMessage);
-  this.newMessage = '';
-},
+      this.socket.emit('sendMessage', chatMessage);
+
+      // 메시지를 화면에 즉시 추가
+      // this.addMessageToChat(chatMessage);
+
+      
+      this.newMessage = '';
+    },
+
+
     addMessageToChat(data) {
-      console.log('채팅에 추가할 메시지:', data);  // 로그 추가
       const message = {
         id: Date.now(),
         sender: data.sender,
-        senderNickname: data.senderNickname, // 닉네임을 함께 표시
+        senderNickname: data.senderNickname,
         text: data.message,
-        isMine: data.sender === this.currentUser.user_id  // 메시지 발신자가 본인인지 확인
+        isMine: data.sender === this.currentUser.user_id
       };
+
       this.messages.push(message);
+      console.log('현재 메시지 리스트:', this.messages);
       this.scrollChatToBottom();
     },
+
     scrollChatToBottom() {
       this.$nextTick(() => {
         const chatContent = this.$el.querySelector('.chat-content');
         chatContent.scrollTop = chatContent.scrollHeight;
       });
     },
+
+    setupSocketListeners() {
+  this.socket.on('message', (data) => {
+    console.log('서버로부터 수신한 메시지:', data); // 서버에서 수신한 메시지 로그
+
+    // 수신한 메시지를 `messages` 배열에 추가하여 상태를 업데이트
+    this.addMessageToChat(data);
+  });
+    },
+
     closeChatRoom() {
       this.showModal = false;
       this.$emit('closeChatRoom');
@@ -169,12 +202,13 @@ export default {
     goBack() {
       this.closeChatRoom();
       this.$emit('goBack');
-    }
+    },
   }
 };
 </script>
 
 <style scoped>
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -198,7 +232,6 @@ export default {
   margin-bottom: 20px;
   margin-right: 20px;
   overflow-y: auto;
-  position: relative;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -209,6 +242,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
+  color: white;
 }
 
 .back-button, .close-button {
@@ -238,32 +272,38 @@ export default {
   flex-direction: column;
 }
 
-.my-message {
-  align-self: flex-end; /* 오른쪽으로 정렬 */
-  text-align: right;
-}
-
-.other-message {
-  align-self: flex-start; /* 왼쪽으로 정렬 */
-  text-align: left;
-}
-
-.my-message .message {
-  background-color: var(--primary-dark);
+.sender-name {
+  font-size: 14px;
   color: white;
-  padding: 10px; /* 말풍선 내부 여백 */
-  border-radius: 15px 15px 0 15px; /* 말풍선 모양 */
-  display: inline-block; /* 크기 조정 */
-  max-width: 70%; /* 말풍선 최대 너비 설정 */
+  margin-bottom: 5px;
 }
 
-.other-message .message {
-  background-color: #f0f0f0;
-  color: black;
-  padding: 10px; /* 말풍선 내부 여백 */
-  border-radius: 15px 15px 15px 0; /* 말풍선 모양 */
-  display: inline-block; /* 크기 조정 */
-  max-width: 70%; /* 말풍선 최대 너비 설정 */
+.message-text {
+    align-self: flex-end; /* 오른쪽으로 정렬 */
+    text-align: right;
+    background-color: #ffd448; /* 내 메시지의 배경색 */
+    color: black; /* 내 메시지의 텍스트 색상 */
+    padding: 10px 15px;
+    border-radius: 20px 20px 0 20px; /* 말풍선 모양의 테두리 */
+    margin-bottom: 10px;
+    max-width: 70%;
+    display: inline-block; /* 말풍선의 크기를 텍스트에 맞게 조정 */
+    position: relative;
+    word-wrap: break-word; /* 긴 단어가 있을 때 자동으로 줄바꿈이 되도록 설정 */
+}
+
+.sender-message-text {
+    align-self: flex-start; /* 왼쪽으로 정렬 */
+    text-align: left;
+    background-color: #f1f1f1; /* 상대 메시지의 배경색 */
+    color: black; /* 상대 메시지의 텍스트 색상 */
+    padding: 10px 15px;
+    border-radius: 20px 20px 20px 0; /* 말풍선 모양의 테두리 */
+    margin-bottom: 10px;
+    max-width: 70%; /* 최대 너비를 70%로 설정하여 화면 크기에 따라 유동적으로 조정 */
+    display: inline-block; /* 말풍선의 크기를 텍스트에 맞게 조정 */
+    position: relative;
+    word-wrap: break-word; /* 긴 단어가 있을 때 자동으로 줄바꿈이 되도록 설정 */
 }
 
 .chat-input {

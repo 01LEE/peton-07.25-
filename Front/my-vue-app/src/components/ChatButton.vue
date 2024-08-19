@@ -13,30 +13,36 @@
 
         <!-- 현재 로그인된 유저의 닉네임 표시 -->
         <div class="user-info">
-          <h3>환영합니다, {{ userNickname }}님!</h3>
+          <H1>Peton</H1>
+          <h3 v-if="currentUser">환영합니다, {{ currentUser.nick_name }}님!</h3>
+          <h3 v-else>사용자 정보를 불러오는 중...</h3>
         </div>
 
          <!-- 컨텐츠 영역 -->
-         <div class="content">
-          <div v-if="activeTab === 'users'">
-            <!-- 유저 목록 표시 -->
-            <h3>유저 목록</h3>
-            <ul>
-              <li v-for="user in users" :key="user.user_id" @click="openChatRoom(user.user_id, user.nick_name)">
-                {{ user.nick_name }}
-              </li>
-            </ul>
-          </div>
+        <div class="content">
+          <!-- 로딩 중 메시지 표시 -->
+          <div v-if="isLoading">로딩 중...</div>
+          <div v-else>
+            <div v-if="activeTab === 'users'">
+              <!-- 유저 목록 표시 -->
+              <h3>유저 목록</h3>
+              <ul>
+                <li v-for="user in otherUsers" :key="user.user_id" @click="openChatRoom(user)">
+                  {{ user.nick_name }}
+                </li>
+              </ul>
+            </div>
 
-          <div v-if="activeTab === 'chatrooms'">
-            <!-- 채팅방 목록 표시 및 삭제 버튼 추가 -->
-            <h3>채팅방 목록</h3>
-            <ul>
-              <li v-for="chatRoom in chatRooms" :key="chatRoom.id" @click="joinExistingChatRoom(chatRoom.id)">
-                {{ chatRoom.other_user_name }}
-                <button @click="deleteChatRoom(chatRoom.id)">삭제</button>
-              </li>
-            </ul>
+            <div v-if="activeTab === 'chatrooms'">
+              <!-- 채팅방 목록 표시 및 삭제 버튼 추가 -->
+              <h3>채팅방 목록</h3>
+              <ul>
+                <li v-for="chatRoom in chatRooms" :key="chatRoom.id" @click="openChatRoom(chatRoom.other_user)">
+                  {{ chatRoom.other_user.nick_name }}
+                  <button @click.stop="deleteChatRoom(chatRoom.id)">삭제</button>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
 
@@ -49,7 +55,14 @@
     </div>
 
     <!-- ChatRoom 모달 -->
-    <ChatRoom v-if="showChatRoom" :roomId="currentRoomId" @closeChatRoom="closeChatRoom" @goBack="goBackToChatList" />
+    <ChatRoom 
+      v-if="showChatRoom" 
+      :currentUser="currentUser"
+      :selectedUser="selectedUser"
+      :currentRoomId="currentRoomId" 
+      @closeChatRoom="closeChatRoom" 
+      @goBack="goBackToChatList" 
+    />
   </div>
 </template>
 
@@ -68,18 +81,19 @@ export default {
       isLoggedIn: false,
       showModal: false,
       showChatRoom: false,
-      userNickname: '',
-      users: [],
+      currentUser: {}, // 현재 유저 정보를 저장
+      selectedUser: {}, // 선택된 유저 정보를 저장
+      otherUsers: [], // 다른 유저 정보를 저장
       chatRooms: [],
       activeTab: 'users', // 'users' 또는 'chatrooms'
       currentRoomId: null,
-      currentUserId: null,
-      messages: [] // 채팅 메시지 저장
+      isLoading: true // 로딩 상태를 관리
     };
   },
   mounted() {
     this.checkLoginStatus(); // 컴포넌트가 마운트될 때 로그인 상태 확인
-    console.log("ChatButton mounted");
+    this.fetchChatRooms(); // 채팅방 목록 로드
+    console.log("챗 버튼 마운트");
 
     // 로그인 상태 변경 이벤트 감지
     emitter.on('userLoggedIn', this.checkLoginStatus);
@@ -97,88 +111,110 @@ export default {
       this.isLoggedIn = !!token; // 토큰이 있으면 로그인 상태로 설정
 
       if (this.isLoggedIn) {
-        this.fetchUserNickname();
-        this.fetchCurrentUserId(); // 현재 로그인한 유저의 ID를 가져옵니다.
+        this.fetchUserData(); // 로그인 후 사용자 데이터 가져오기
       }
     },
-    fetchCurrentUserId() {
-      axios.get('/api/current-user-id')  // 서버에서 현재 로그인한 유저의 ID를 가져오는 API
-        .then(response => {
-          this.currentUserId = response.data.userId;
-          console.log('현재 유저의 ID:', this.currentUserId);
+    fetchUserData() {
+      // 로딩 상태 시작
+      this.isLoading = true;
+
+      axios.get('/api/getCurrentUser')
+        .then(userResponse => {
+          const currentUser = userResponse.data;
+
+          if (!currentUser || !currentUser.user_id) {
+            console.error('로그인한 사용자 정보를 가져올 수 없습니다.');
+            return;
+          }
+
+          this.currentUser = currentUser;
+
+          // 이제 다른 모든 유저 정보를 가져옵니다.
+          return axios.get('/api/users-all');
+        })
+        .then(usersResponse => {
+          const allUsers = usersResponse.data;
+
+          this.otherUsers = allUsers.filter(user => user.user_id !== this.currentUser.user_id);
+
+          console.log("Current user:", this.currentUser);
+          console.log("Other users:", this.otherUsers);
         })
         .catch(error => {
-          console.error('유저 ID를 가져오는 중 오류 발생:', error);
-          this.currentUserId = null;
-      });
-    },
-    fetchUserNickname() {
-      // 여기서는 로컬 스토리지나 서버로부터 닉네임을 가져오는 API 호출을 예시로 들겠습니다.
-      axios.get('/api/username')  // 현재 유저의 정보를 가져오는 API 경로
-        .then(response => {
-          this.userNickname = response.data.nick_name || '알 수 없는 유저';
+          console.error('유저 정보를 가져오는 중 오류 발생:', error);
         })
-        .catch(error => {
-          console.error('유저 닉네임을 가져오는 중 오류 발생:', error);
-          this.userNickname = '알 수 없는 유저';
-        });
-    },
-    fetchAllUsers() {
-      axios.get('/api/users-all')  // 모든 유저를 불러오는 API 경로
-        .then(response => {
-          console.log("Fetched users:", response.data); // 유저 목록을 콘솔에 출력
-          this.users = response.data;
-        })
-        .catch(error => {
-          console.error('유저 목록을 가져오는 중 오류 발생:', error);
+        .finally(() => {
+          // 로딩 상태 종료
+          this.isLoading = false;
         });
     },
     fetchChatRooms() {
-      axios.get('/api/chatlist') // 채팅방 목록을 가져오는 API 경로
+      this.isLoading = true;
+
+      axios.get('/api/chatlist')
         .then(response => {
-          console.log("Fetched chat rooms:", response.data);
-          this.chatRooms = response.data;
+            console.log("Fetched chat rooms:", response.data);
+            this.chatRooms = response.data;
+
         })
         .catch(error => {
-          console.error('채팅방 목록을 가져오는 중 오류 발생:', error);
+            console.error('채팅방 목록을 가져오는 중 오류 발생:', error);
+        })
+        .finally(() => {
+          this.isLoading = false;
         });
     },
     deleteChatRoom(roomId) {
-      axios.delete(`/api/deleteChatRoom?roomId=${roomId}`) // 채팅방 삭제 요청
+      axios.delete(`/api/deleteChatRoom?roomId=${roomId}`)
         .then(() => {
           console.log(`Chat room ${roomId} deleted`);
-          this.fetchChatRooms(); // 삭제 후 채팅방 목록 갱신
+          this.fetchChatRooms();
         })
         .catch(error => {
           console.error('채팅방 삭제 중 오류 발생:', error);
         });
     },
-    openChatRoom(targetUserId, targetUserName) {
-      const userId = this.currentUserId;
+    // 상대 유저의 정보를 ChatRoom.vue로 전달
+    openChatRoom(targetUser) {
+  console.log('openChatRoom called with user:', targetUser);
 
-      axios.post('/api/createOrFindChatRoom', { userId, targetUserId, targetUserName })
-        .then(response => {
-          const chatRoomId = response.data.chatRoomId;
-          if (chatRoomId) {
-            this.currentRoomId = chatRoomId;
-            this.showModal = false; // ChatButton 모달 닫기
-            this.showChatRoom = true; // ChatRoom 모달 열기
-            this.loadMessages(chatRoomId); // 채팅방의 기존 메시지 로드
-          } else {
-            console.error('채팅방 생성 또는 조회 중 문제가 발생했습니다.');
-          }
-        })
-        .catch(error => {
-          console.error('채팅방으로 이동 중 오류 발생:', error);
-        });
-    },
+  // 대상 사용자의 정보가 올바르게 전달되었는지 확인
+  if (!targetUser || !targetUser.user_id || !targetUser.nick_name) {
+    console.error('Target user information is incomplete', targetUser);
+    return;
+  }
+
+  this.selectedUser = targetUser;
+  console.log('Selected user:', this.selectedUser);
+
+  // 현재 유저와 선택된 유저의 정보를 ChatRoom.vue로 전달
+  this.showModal = false;
+  this.showChatRoom = true;
+},
+
+
+    /*
     joinExistingChatRoom(roomId) {
-      // 채팅방 목록에서 호출: 이미 존재하는 채팅방으로 이동
-      this.currentRoomId = roomId;
-      this.showModal = false; // ChatButton 모달 닫기
-      this.showChatRoom = true; // ChatRoom 모달 열기
-      this.loadMessages(roomId); // 채팅방의 기존 메시지 로드
+    const chatRoom = this.chatRooms.find(room => room.id === roomId);
+    console.log('joinExistingChatRoom found chatRoom:', chatRoom); // 로그 추가
+    if (!chatRoom || !chatRoom.other_user_name) {
+        console.error('Other user name is undefined');
+        return;
+    }
+    this.selectedUserNickname = chatRoom.other_user_name;
+    console.log('Selected user nickname:', this.selectedUserNickname); // 로그 추가
+
+    this.currentRoomId = roomId;
+
+    // 기존 채팅방으로 이동할 때마다 메시지 목록을 초기화합니다.
+      this.messages = [];
+      this.showModal = false;
+      this.showChatRoom = true;
+      this.loadMessages(roomId);
     },
+    */
+
+    /*
     loadMessages(roomId) {
       axios.get(`/api/messages?roomId=${roomId}`)
         .then(response => {
@@ -188,6 +224,9 @@ export default {
           console.error('메시지를 가져오는 중 오류 발생:', error);
         });
     },
+    */
+
+    /*
     sendMessage() {
       if (this.newMessage.trim() === '') return;
 
@@ -208,18 +247,23 @@ export default {
           console.error('메시지 전송 중 오류 발생:', error);
         });
     },
+    */
+
+    /*
     scrollChatToBottom() {
       this.$nextTick(() => {
         const chatContent = this.$el.querySelector('.chat-content');
         chatContent.scrollTop = chatContent.scrollHeight;
       });
     },
+    */
+   
     // 모달 열기
     openModal() {
-  console.log("openModal called");
+      console.log("openModal called");
   this.showModal = true;
   this.activeTab = 'users';  // 기본적으로 유저 목록을 먼저 보여줍니다
-  this.fetchAllUsers(); // 모달이 열릴 때 유저 목록을 먼저 보여줌
+  // this.fetchUserData (); // 모달이 열릴 때 유저 목록을 먼저 보여줌
     },
     // 모달 닫기
     closeModal() {
@@ -236,7 +280,7 @@ export default {
     },
     showUsers() {
       this.activeTab = 'users';
-      this.fetchAllUsers(); // 유저 목록을 가져옴
+      this.fetchUserData(); // 유저 목록을 가져옴
     },
     showChatRooms() {
       this.activeTab = 'chatrooms';
@@ -247,6 +291,7 @@ export default {
 </script>
 
 <style scoped>
+
 .chat-button {
   position: fixed;
   bottom: 20px;
@@ -283,19 +328,19 @@ export default {
 }
 
 .modal-content {
-  background-color: var(--primary-normal); /* 배경색을 메인 색상으로 변경 */
+  background-color: var(--primary-normal);
   padding: 20px;
   border-radius: 15px;
-  width: 85%; /* 가로폭 조정 */
-  height: 70%; /* 세로 길이 조정 */
-  max-width: 400px; /* 최대 너비 설정 */
-  margin-bottom: 20px; /* 하단 공간 추가 */
-  margin-right: 20px; /* 오른쪽 공간 추가 */
-  overflow-y: auto;
-  position: relative; /* 닫기 버튼 위치 조정 위해 */
+  width: 85%;
+  max-width: 400px;
+  margin-bottom: 20px;
+  margin-right: 20px;
+  position: relative;
   display: flex;
-  flex-direction: column; /* 네비바를 하단에 고정하기 위해 flex 사용 */
-  justify-content: flex-start; /* 상단부터 콘텐츠를 채움 */
+  flex-direction: column;
+  height: 70%; /* 모달 창의 전체 높이 조정 */
+  box-sizing: border-box;
+  overflow: hidden; /* 전체 모달 창에서 스크롤을 방지 */
 }
 
 .close-button {
@@ -312,12 +357,15 @@ export default {
 .user-info {
   text-align: center;
   color: white;
+  margin-bottom: 20px; /* Navbar와 겹치지 않도록 여백 추가 */
 }
+
 .content {
   flex: 1;
-  margin-top: 20px;
   color: white;
-  overflow-y: auto; /* 컨텐츠가 많아질 경우 스크롤 가능 */
+  overflow-y: auto; /* content 영역만 스크롤 가능하도록 설정 */
+  padding-bottom: 60px; /* navbar 높이만큼 여백 추가 */
+  box-sizing: border-box;
 }
 
 .content ul {
@@ -327,20 +375,34 @@ export default {
 
 .content li {
   margin: 5px 0;
+  padding: 10px;
+  background-color: var(--primary-dark);
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.content li:hover {
+  background-color: var(--primary-light) !important;
+  color: var(--secondary-light) !important;
 }
 
 .navbar {
-  width: 90%; /* 모달 창의 90% 너비 */
-  height: 10%; /* 모달 창의 10% 높이 */
-  position: absolute;
-  top: 450px; /* 모달 창의 하단에 위치 */
-  left: 50%; /* 중앙에 위치하도록 설정 */
-  transform: translateX(-50%); /* 가로 방향으로 중앙 정렬 */
+  position: absolute; /* 부모 요소의 하단에 고정되도록 설정 */
+  bottom: 0; /* 모달 창의 하단에 고정 */
+  left: 0;
+  right: 0;
+  background-color: var(--primary-dark);
+  border-radius: 0 0 10px 10px;
   display: flex;
   justify-content: space-between;
+  height: 50px;
   padding: 10px;
-  background-color: var(--primary-dark);
-  border-radius: 10px; /* 네비게이션 바의 둥근 모서리 추가 */
+  width: calc(100% - 40px); /* 좌우 패딩을 고려한 너비 설정 */
+  box-sizing: border-box; /* padding과 border가 width와 height에 포함되도록 설정 */
+  /*border-top: 2px solid white;위쪽에 흰색 선 추가 */
+  margin: 0 auto; /* 중앙 정렬을 위해 추가 */
 }
 
 .navbar button {
@@ -352,9 +414,11 @@ export default {
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  transition: background-color 0.3s ease; /* 색상 변화에 대한 부드러운 전환 */
 }
 
 .navbar button:hover {
   background-color: var(--primary-light);
+  color: var(--secondary-light); /* 텍스트 색상도 변경 */
 }
 </style>

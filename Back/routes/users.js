@@ -43,31 +43,9 @@ router.get('/users', isAuthenticated, (req, res) => {
   });
 });
 
-router.get('/current-user-id', isAuthenticated, (req, res) => {
-  if (req.session.userid) {
-    res.json({ userId: req.session.userid });
-  } else {
-    res.status(401).json({ error: 'User not authenticated' });
-  }
-});
-
-// 사용자 정보 가져오기
-router.get('/getCurrentUser', (req, res) => {
-  // 세션에서 현재 사용자 정보 가져오기
-  if (req.session && req.session.userid && req.session.login_id) {
-    res.json({ 
-      user_id: req.session.userid, 
-      login_id: req.session.login_id, 
-      sender: req.session.login_id, 
-      receiver: 'all' 
-    });
-  } else {
-    res.status(401).json({ error: 'User not authenticated' });
-  }
-});
-
 // 채팅방 생성 또는 기존 채팅방으로 이동
-router.post('/createOrFindChatRoom', isAuthenticated, (req, res) => {
+/*
+  router.post('/createOrFindChatRoom', isAuthenticated, (req, res) => {
 
   // 라우트 접근 확인 로그
   console.log("Create or Find Chat Room route accessed");
@@ -118,7 +96,9 @@ router.post('/createOrFindChatRoom', isAuthenticated, (req, res) => {
       });
     }
   });
-});
+  });
+*/
+
 
 module.exports = router;
 
